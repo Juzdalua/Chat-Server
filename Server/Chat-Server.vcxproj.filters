@@ -4,11 +4,14 @@
     <Filter Include="Main">
       <UniqueIdentifier>{06c58e10-c489-47b8-834f-426af8dc88c8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Server">
-      <UniqueIdentifier>{635dbbab-270e-412b-9a67-1305242635a2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Utils">
       <UniqueIdentifier>{4b2b1e9e-3c26-4d7c-b0ae-5df3ce93fb18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TCPServer">
+      <UniqueIdentifier>{635dbbab-270e-412b-9a67-1305242635a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="HTTPServer">
+      <UniqueIdentifier>{a0a739a4-837d-4508-b393-a350d6cae638}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -16,13 +19,13 @@
       <Filter>Main</Filter>
     </ClCompile>
     <ClCompile Include="IocpCore.cpp">
-      <Filter>Server</Filter>
+      <Filter>TCPServer</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="Session.cpp">
-      <Filter>Server</Filter>
+      <Filter>TCPServer</Filter>
     </ClCompile>
     <ClCompile Include="RecvBuffer.cpp">
       <Filter>Utils</Filter>
@@ -34,13 +37,13 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="IocpEvent.cpp">
-      <Filter>Server</Filter>
+      <Filter>TCPServer</Filter>
     </ClCompile>
     <ClCompile Include="SendBuffer.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="ClientPacketHandler.cpp">
-      <Filter>Server</Filter>
+      <Filter>TCPServer</Filter>
     </ClCompile>
     <ClCompile Include="PacketQueue.cpp">
       <Filter>Utils</Filter>
@@ -48,10 +51,13 @@
     <ClCompile Include="SendQueue.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="HttpCore.cpp">
+      <Filter>HTTPServer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IocpCore.h">
-      <Filter>Server</Filter>
+      <Filter>TCPServer</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Utils</Filter>
@@ -66,7 +72,7 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Session.h">
-      <Filter>Server</Filter>
+      <Filter>TCPServer</Filter>
     </ClInclude>
     <ClInclude Include="RecvBuffer.h">
       <Filter>Utils</Filter>
@@ -78,19 +84,22 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="IocpEvent.h">
-      <Filter>Server</Filter>
+      <Filter>TCPServer</Filter>
     </ClInclude>
     <ClInclude Include="SendBuffer.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="ClientPacketHandler.h">
-      <Filter>Server</Filter>
+      <Filter>TCPServer</Filter>
     </ClInclude>
     <ClInclude Include="PacketQueue.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="SendQueue.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpCore.h">
+      <Filter>HTTPServer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

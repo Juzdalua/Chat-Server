@@ -2,6 +2,7 @@
 #include "IocpCore.h"
 #include "PacketQueue.h"
 #include "SendQueue.h"
+#include "HttpCore.h"
 
 /*
 	API 스레드 1개
@@ -12,9 +13,31 @@
 void IocpWorker(shared_ptr<IocpCore> iocpCore);
 void PacketWorker();
 
+void StartHttpServer()
+{
+	try {
+		net::io_context ioc;
+		tcp::acceptor acceptor(ioc, tcp::endpoint(tcp::v4(), 8080));
+
+		cout << "Server started on port 8080" << endl;
+
+		while (true) {
+			tcp::socket socket(ioc);
+			acceptor.accept(socket);
+
+			handle_request(socket);
+		}
+	}
+	catch (exception& e) {
+		cerr << "Error: " << e.what() << endl;
+	}
+}
+
+
 int main()
 {
-	// Server Set
+	
+	// TCP Server Set
 	shared_ptr<IocpCore> iocpCore = make_shared<IocpCore>();
 	iocpCore->StartServer();
 
@@ -26,6 +49,7 @@ int main()
 	vector<thread> workers;
 	workers.emplace_back(IocpWorker, iocpCore);
 	workers.emplace_back(PacketWorker);
+	workers.emplace_back(StartHttpServer);
 
 	// Exit
 	for (auto& worker : workers)
