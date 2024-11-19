@@ -1,13 +1,13 @@
 ﻿#include "pch.h"
 #include "IocpCore.h"
 #include "PacketQueue.h"
+#include "SendQueue.h"
 
 /*
 	API 스레드 1개
 	클라이언트 IO 수신 및 송신 스레드 1개
 	TCP 메인로직처리 스레드 1개
 */
-unique_ptr<PacketQueue> pktQueue = make_unique<PacketQueue>();
 
 void IocpWorker(shared_ptr<IocpCore> iocpCore);
 void PacketWorker();
@@ -42,7 +42,7 @@ void IocpWorker(shared_ptr<IocpCore> iocpCore)
 	{
 		iocpCore->Dispatch(10);
 
-		// io
+		//if (sendQueue->Size() > 0) sendQueue->PopSend();
 	}
 }
 

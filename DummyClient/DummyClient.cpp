@@ -109,7 +109,7 @@ int main()
 		}
 
 		//	// Echo Receiver
-		/*char recvBuffer[1000];
+		char recvBuffer[1000];
 		int recvLen = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
 		if (recvLen <= 0)
 		{
@@ -119,7 +119,7 @@ int main()
 		}
 
 		cout << "Recv Data! Len = " << recvLen << endl;
-		cout << "Recv Data! Data = " << recvBuffer << endl;*/
+		cout << "Recv Data! Data = " << recvBuffer << endl;
 	}
 
 	// 5. Socket 종료

@@ -42,7 +42,12 @@
     <ClCompile Include="ClientPacketHandler.cpp">
       <Filter>Server</Filter>
     </ClCompile>
-    <ClCompile Include="PacketQueue.cpp" />
+    <ClCompile Include="PacketQueue.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="SendQueue.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IocpCore.h">
@@ -81,7 +86,12 @@
     <ClInclude Include="ClientPacketHandler.h">
       <Filter>Server</Filter>
     </ClInclude>
-    <ClInclude Include="PacketQueue.h" />
+    <ClInclude Include="PacketQueue.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="SendQueue.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.gitignore" />

@@ -2,6 +2,8 @@
 #include "PacketQueue.h"
 #include "ClientPacketHandler.h"
 
+unique_ptr<PacketQueue> pktQueue = make_unique<PacketQueue>();
+
 void PacketQueue::Push(PacketData _pkt)
 {
 	lock_guard<mutex> lock(_lock);
