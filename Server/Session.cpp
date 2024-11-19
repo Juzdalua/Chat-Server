@@ -3,6 +3,7 @@
 #include "SocketUtils.h"
 #include "SendBuffer.h"
 #include "ClientPacketHandler.h"
+#include "PacketQueue.h"
 
 Session::Session()
 	:_recvBuffer(BUFFER_SIZE)
@@ -92,13 +93,7 @@ void Session::ProcessRecv(int32 numOfBytes)
 
 int32 Session::OnRecv(BYTE* buffer, int32 len)
 {
-	ClientPacketHandler::HandlePacket(buffer, len, shared_from_this());
-	
-	// Echo
-	cout << "OnRecv Data = " << buffer << endl;
-	/*shared_ptr<SendBuffer> sendBuffer = shared_ptr<SendBuffer>(new SendBuffer(4096));
-	sendBuffer->CopyData(buffer, len);
-	Send(sendBuffer);*/
+	pktQueue->Push({ buffer, len, shared_from_this() });
 	
 	return len;
 }

@@ -164,12 +164,12 @@ bool IocpCore::Dispatch(uint32 timeoutMs)
 			break;
 
 		case EventType::Send:
-			iocpEvent->sessionRef->ProcessRecv(numOfBytes);
+			iocpEvent->sessionRef->ProcessSend(numOfBytes, static_cast<SendEvent*>(iocpEvent)->sendBuffers);
 			break;
 
 		default:
 			break;
 		}
-		
+
 	}
 }

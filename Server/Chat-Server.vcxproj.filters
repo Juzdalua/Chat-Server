@@ -12,10 +12,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include=".gitignore" />
-    <None Include="README.md" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Main</Filter>
     </ClCompile>
@@ -46,6 +42,7 @@
     <ClCompile Include="ClientPacketHandler.cpp">
       <Filter>Server</Filter>
     </ClCompile>
+    <ClCompile Include="PacketQueue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IocpCore.h">
@@ -84,5 +81,9 @@
     <ClInclude Include="ClientPacketHandler.h">
       <Filter>Server</Filter>
     </ClInclude>
+    <ClInclude Include="PacketQueue.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.gitignore" />
   </ItemGroup>
 </Project>
