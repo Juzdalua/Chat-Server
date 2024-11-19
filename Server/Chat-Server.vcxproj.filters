@@ -37,7 +37,12 @@
     <ClCompile Include="NetAddress.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="IocpEvent.cpp" />
+    <ClCompile Include="IocpEvent.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="SendBuffer.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IocpCore.h">
@@ -67,6 +72,11 @@
     <ClInclude Include="NetAddress.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="IocpEvent.h" />
+    <ClInclude Include="IocpEvent.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="SendBuffer.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

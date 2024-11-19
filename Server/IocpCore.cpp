@@ -24,7 +24,8 @@ void IocpCore::HandleError(string errorMsg)
 
 bool IocpCore::Start()
 {
-	if (WSAStartup(MAKEWORD(2, 2), &_wsaData) != 0)
+	WSAData wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
 		HandleError("WSAStartup");
 		return false;
@@ -108,16 +109,6 @@ bool IocpCore::Accept(shared_ptr<Session> session)
 void IocpCore::Register(shared_ptr<Session> session)
 {
 	CreateIoCompletionPort((HANDLE)(session->_clientSocket), _iocpHandle, 0, 0);
-	RegisterRecv(session);
-}
-
-void IocpCore::RegisterRecv(shared_ptr<Session> session)
-{
-	WSABUF wsaBuf;
-	DWORD numOfBytes = 0;
-	DWORD flags = 0;
-
-	//WSARecv(session->_clientSocket, &wsaBuf, 1, &numOfBytes, &flags, )
 }
 
 void IocpCore::StartAccept(shared_ptr<Session> session)
@@ -161,6 +152,14 @@ bool IocpCore::Dispatch(uint32 timeoutMs)
 	}
 	else
 	{
-		// Dispatch
+		switch (iocpEvent->_eventType)
+		{
+		case EventType::Recv:
+			iocpEvent->sessionRef->ProcessRecv(numOfBytes);
+			break;
+		default:
+			break;
+		}
+		
 	}
 }

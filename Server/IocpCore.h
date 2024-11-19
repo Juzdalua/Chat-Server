@@ -20,16 +20,14 @@ public:
 	void SetIOCP();
 	bool Accept(shared_ptr<Session> session);
 	void Register(shared_ptr<Session> session);
-	void RegisterRecv(shared_ptr<Session> session);
 	void StartAccept(shared_ptr<Session> session);
 
 	bool Dispatch(uint32 timeoutMs = INFINITE);
 
 
 private:
-	WSAData _wsaData;
 	SOCKET _listenSocket = INVALID_SOCKET;
-	SOCKADDR_IN _serverAddr;
-	HANDLE _iocpHandle;
+	SOCKADDR_IN _serverAddr = { 0 };
+	HANDLE _iocpHandle = INVALID_HANDLE_VALUE;
 };
 

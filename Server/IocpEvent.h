@@ -1,5 +1,7 @@
 #pragma once
 
+class Session;
+
 enum class EventType :uint8
 {
 	Connect,
@@ -15,8 +17,9 @@ public:
 	IocpEvent(EventType type);
 	void Init();
 
-private:
+public:
 	EventType _eventType;
+	shared_ptr<Session> sessionRef;
 };
 
 class ConnectEvent : public IocpEvent

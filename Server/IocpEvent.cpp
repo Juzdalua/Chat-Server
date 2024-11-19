@@ -15,3 +15,4 @@ void IocpEvent::Init()
 	OVERLAPPED::Offset = 0;
 	OVERLAPPED::OffsetHigh = 0;
 }
+
