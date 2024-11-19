@@ -60,12 +60,46 @@ int main()
 
 	cout << "Connected To Server!" << endl;
 
-	while (true) {}
-
 	// 4. 데이터 송수신
+	//while (true)
+	//{
+	//	char sendBuffer[100] = "Hello World!";
+	//	int resultCode = send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+	//	if (resultCode == SOCKET_ERROR)
+	//	{
+	//		int errCode = WSAGetLastError();
+	//		cout << "Send ErrorCode: " << errCode << endl;
+	//		return 0;
+	//	}
+
+	//	cout << "Send Data! Len = " << sizeof(sendBuffer) << endl;
+
+	//	// Echo Receiver
+	//	char recvBuffer[1000];
+	//	int recvLen = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+	//	if (recvLen <= 0)
+	//	{
+	//		int errCode = WSAGetLastError();
+	//		cout << "Recv ErrorCode: " << errCode << endl;
+	//		return 0;
+	//	}
+
+	//	cout << "Recv Data! Len = " << recvLen << endl;
+	//	cout << "Recv Data! Data = " << recvBuffer << endl;
+
+	//	this_thread::sleep_for(1s);
+	//}
+
 	while (true)
 	{
-		char sendBuffer[100] = "Hello World!";
+		char sendBuffer[100] = "";
+		string input;
+		cin >> input;
+		for (int i = 0; i < input.size(); i++)
+		{
+			sendBuffer[i] = input[i];
+		}
+
 		int resultCode = send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
 		if (resultCode == SOCKET_ERROR)
 		{
@@ -73,23 +107,6 @@ int main()
 			cout << "Send ErrorCode: " << errCode << endl;
 			return 0;
 		}
-
-		cout << "Send Data! Len = " << sizeof(sendBuffer) << endl;
-
-		// Echo Receiver
-		char recvBuffer[1000];
-		int recvLen = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
-		if (recvLen <= 0)
-		{
-			int errCode = WSAGetLastError();
-			cout << "Recv ErrorCode: " << errCode << endl;
-			return 0;
-		}
-
-		cout << "Recv Data! Len = " << recvLen << endl;
-		cout << "Recv Data! Data = " << recvBuffer << endl;
-
-		this_thread::sleep_for(1s);
 	}
 
 	// 5. Socket 종료

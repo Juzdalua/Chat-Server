@@ -106,7 +106,7 @@ bool IocpCore::Accept(shared_ptr<Session> session)
 	return true;
 }
 
-void IocpCore::Register(shared_ptr<Session> session)
+void IocpCore::RegisterClient(shared_ptr<Session> session)
 {
 	CreateIoCompletionPort((HANDLE)(session->_clientSocket), _iocpHandle, 0, 0);
 }
@@ -123,8 +123,10 @@ void IocpCore::StartAccept(shared_ptr<Session> session)
 		}
 		break;
 	}
-	Register(session);
+	RegisterClient(session);
 	cout << "Accept Done" << '\n';
+
+	session->RegisterRecv();
 }
 
 bool IocpCore::Dispatch(uint32 timeoutMs)

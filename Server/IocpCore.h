@@ -19,7 +19,7 @@ public:
 
 	void SetIOCP();
 	bool Accept(shared_ptr<Session> session);
-	void Register(shared_ptr<Session> session);
+	void RegisterClient(shared_ptr<Session> session);
 	void StartAccept(shared_ptr<Session> session);
 
 	bool Dispatch(uint32 timeoutMs = INFINITE);
