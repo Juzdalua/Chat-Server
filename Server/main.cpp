@@ -12,9 +12,6 @@ int main()
     iocpCore->StartAccept(session);
 
     thread t1(IocpWorker, iocpCore);
-
-    
-
     t1.join();
 
     cout << "exit" << '\n';

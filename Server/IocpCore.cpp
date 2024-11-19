@@ -109,11 +109,14 @@ bool IocpCore::Accept(shared_ptr<Session> session)
 void IocpCore::RegisterClient(shared_ptr<Session> session)
 {
 	CreateIoCompletionPort((HANDLE)(session->_clientSocket), _iocpHandle, 0, 0);
+	session->_connected.store(true);
 }
 
 void IocpCore::StartAccept(shared_ptr<Session> session)
 {
 	SetIOCP();
+	if (session->IsConnected()) return;
+
 	cout << "Wait Accept..." << '\n';
 	while (true)
 	{
@@ -159,6 +162,11 @@ bool IocpCore::Dispatch(uint32 timeoutMs)
 		case EventType::Recv:
 			iocpEvent->sessionRef->ProcessRecv(numOfBytes);
 			break;
+
+		case EventType::Send:
+			iocpEvent->sessionRef->ProcessRecv(numOfBytes);
+			break;
+
 		default:
 			break;
 		}

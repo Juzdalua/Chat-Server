@@ -3,7 +3,6 @@
 
 bool ClientPacketHandler::HandlePacket(BYTE* buffer, int32 len, shared_ptr<Session> session)
 {
-	cout << "Handle Packet" << '\n';
 	PacketHeader* recvHeader = reinterpret_cast<PacketHeader*>(buffer);
 
 	switch (recvHeader->id)

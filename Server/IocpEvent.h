@@ -1,6 +1,7 @@
 #pragma once
 
 class Session;
+class SendBuffer;
 
 enum class EventType :uint8
 {
@@ -38,7 +39,6 @@ class AcceptEvent : public IocpEvent
 {
 public:
 	AcceptEvent() :IocpEvent(EventType::Disconnect) {}
-	// session
 };
 
 class RecvEvent :public IocpEvent
@@ -51,5 +51,5 @@ class SendEvent :public IocpEvent
 {
 public:
 	SendEvent() :IocpEvent(EventType::Send) {}
-	// sendBuffer
+	vector<shared_ptr<SendBuffer>> sendBuffers;
 };

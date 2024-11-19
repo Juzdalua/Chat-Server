@@ -15,6 +15,8 @@
 #include <unordered_set>
 #include <memory>
 #include <thread>
+#include <atomic>
+#include <mutex>
 
 #include <windows.h>
 #include <iostream>
