@@ -43,6 +43,9 @@
     <ClCompile Include="SendBuffer.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="ClientPacketHandler.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IocpCore.h">
@@ -77,6 +80,9 @@
     </ClInclude>
     <ClInclude Include="SendBuffer.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientPacketHandler.h">
+      <Filter>Server</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
