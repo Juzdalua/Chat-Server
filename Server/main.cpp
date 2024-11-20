@@ -52,16 +52,15 @@ void StartHttpServer()
 
 int main()
 {
-	TestJSON();
-	return 0;
-
 	// TCP Server Set
-	shared_ptr<IocpCore> iocpCore = make_shared<IocpCore>();
+	int32 MAX_SESSION_COUNT = 1;
+	shared_ptr<IocpCore> iocpCore = make_shared<IocpCore>(
+		NetAddress(L"127.0.0.1", 7777)
+	);
 	iocpCore->StartServer();
 
 	// Client Set
-	shared_ptr<Session> session = make_shared<Session>();
-	iocpCore->StartAccept(session);
+	iocpCore->StartAccept();
 
 	// Thread
 	vector<thread> workers;

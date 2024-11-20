@@ -11,6 +11,7 @@ using namespace std;
 
 int main()
 {
+	this_thread::sleep_for(1s);
 	// 1. Socket 초기화
 	WSAData wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
@@ -108,18 +109,18 @@ int main()
 			return 0;
 		}
 
-		//	// Echo Receiver
-		char recvBuffer[1000];
-		int recvLen = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
-		if (recvLen <= 0)
-		{
-			int errCode = WSAGetLastError();
-			cout << "Recv ErrorCode: " << errCode << endl;
-			return 0;
-		}
+		////	// Echo Receiver
+		//char recvBuffer[1000];
+		//int recvLen = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+		//if (recvLen <= 0)
+		//{
+		//	int errCode = WSAGetLastError();
+		//	cout << "Recv ErrorCode: " << errCode << endl;
+		//	return 0;
+		//}
 
-		cout << "Recv Data! Len = " << recvLen << endl;
-		cout << "Recv Data! Data = " << recvBuffer << endl;
+		//cout << "Recv Data! Len = " << recvLen << endl;
+		//cout << "Recv Data! Data = " << recvBuffer << endl;
 	}
 
 	// 5. Socket 종료

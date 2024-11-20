@@ -38,7 +38,7 @@ public:
 class AcceptEvent : public IocpEvent
 {
 public:
-	AcceptEvent() :IocpEvent(EventType::Disconnect) {}
+	AcceptEvent() :IocpEvent(EventType::Accept) {}
 };
 
 class RecvEvent :public IocpEvent

@@ -21,6 +21,8 @@ Session::~Session()
 ----------------*/
 bool Session::Disconnect(const WCHAR* cause)
 {
+	if (_connected.exchange(false) == false) return false;
+
 	_disconnectEvent.Init();
 	_disconnectEvent.sessionRef = shared_from_this();
 
@@ -37,20 +39,40 @@ bool Session::Disconnect(const WCHAR* cause)
 	return true;
 }
 
+void Session::ProcessConnect()
+{
+	_connectEvent.sessionRef = nullptr;
+	_connected.store(true);
+
+	OnConnected();
+
+	RegisterRecv();
+}
+
+void Session::ProcessDisconnect()
+{
+	_disconnectEvent.sessionRef = nullptr;
+	OnDisconnected();
+}
+
 /*----------------
 	Recv
 ----------------*/
 void Session::RegisterRecv()
 {
-	WSABUF wsaBuf = { 0 };
+	if (IsConnected() == false)
+		return;
+
+	_recvEvent.Init();
+	_recvEvent.sessionRef = shared_from_this();
+
+	WSABUF wsaBuf;
 	wsaBuf.buf = reinterpret_cast<char*>(_recvBuffer.WritePos());
 	wsaBuf.len = _recvBuffer.FreeSize();
 
 	DWORD numOfBytes = 0;
 	DWORD flags = 0;
 
-	_recvEvent.Init();
-	_recvEvent.sessionRef = shared_from_this();
 
 	if (WSARecv(_clientSocket, &wsaBuf, 1, &numOfBytes, &flags, &_recvEvent, nullptr) == SOCKET_ERROR)
 	{
@@ -67,21 +89,22 @@ void Session::ProcessRecv(int32 numOfBytes)
 	_recvEvent.sessionRef = nullptr;
 	if (numOfBytes == 0)
 	{
-		// TODO
+		Disconnect(L"Recv 0");
 		return;
 	}
-
+	
 	if (_recvBuffer.OnWrite(numOfBytes) == false)
 	{
+		Disconnect(L"OnWrite Overflow");
 		return;
 	}
-
+	
 	int32 dataSize = _recvBuffer.DataSize();
 	int32 processLen = OnRecv(_recvBuffer.ReadPos(), dataSize);
 
 	if (processLen < 0 || dataSize < processLen || _recvBuffer.OnRead(processLen) == false)
 	{
-		//Disconnect(L"OnRead Overflow");
+		Disconnect(L"OnRead Overflow");
 		return;
 	}
 
@@ -93,6 +116,7 @@ void Session::ProcessRecv(int32 numOfBytes)
 
 int32 Session::OnRecv(BYTE* buffer, int32 len)
 {
+	cout << "OnRecv -> " << buffer << '\n';
 	pktQueue->Push({ buffer, len, shared_from_this() });
 	
 	return len;
@@ -110,6 +134,16 @@ int32 Session::OnSend(int32 len, vector<shared_ptr<SendBuffer>> sendVec)
 	}
 
 	return len;
+}
+
+void Session::OnConnected()
+{
+	cout << "OnConnected" << '\n';
+}
+
+void Session::OnDisconnected()
+{
+	cout << "OnDisconnected" << '\n';
 }
 
 /*----------------

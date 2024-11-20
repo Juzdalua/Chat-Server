@@ -1,6 +1,7 @@
 #pragma once
 #include "RecvBuffer.h"
 #include "IocpEvent.h"
+#include "NetAddress.h"
 
 struct PacketHeader
 {
@@ -26,6 +27,9 @@ public:
 	SOCKET GetClientSocket() { return _clientSocket; }
 	SOCKADDR_IN GetClientAddr() { return _clientAddr; }
 
+	void SetNetAddress(NetAddress address) { _netAddress = address; }
+	NetAddress GetAddress() { return _netAddress; }
+
 	bool IsConnected() { return _connected; }
 
 public:
@@ -33,16 +37,26 @@ public:
 	void Send(shared_ptr<SendBuffer> sendBuffer);
 
 private:
+	HANDLE GetHandle() { return reinterpret_cast<HANDLE>(_clientSocket); }
+
+	void ProcessConnect();
+	void ProcessDisconnect();
+
 	void RegisterRecv();
 	void ProcessRecv(int32 numOfBytes);
-	int32 OnRecv(BYTE* buffer, int32 len);
-	int32 OnSend(int32 len, vector<shared_ptr<SendBuffer>> sendVec);
 
 	void RegisterSend();
 	void ProcessSend(int32 numOfBytes, vector<shared_ptr<SendBuffer>> sendVec);
 
+private:
+	void OnConnected();
+	void OnDisconnected();
+	int32 OnRecv(BYTE* buffer, int32 len);
+	int32 OnSend(int32 len, vector<shared_ptr<SendBuffer>> sendVec);
 
 private:
+	NetAddress _netAddress = {};
+
 	atomic<bool> _connected = false;
 	SOCKET _clientSocket = INVALID_SOCKET;
 	SOCKADDR_IN _clientAddr;
