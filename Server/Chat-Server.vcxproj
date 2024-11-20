@@ -125,7 +125,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\boost_1_79_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\USERONE\Desktop\workspace\Chat-Server\Libs\include;C:\boost_1_79_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
@@ -154,6 +154,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ClientJsonHandler.cpp" />
     <ClCompile Include="ClientPacketHandler.cpp" />
     <ClCompile Include="HttpCore.cpp" />
     <ClCompile Include="IocpCore.cpp" />
@@ -178,6 +179,7 @@
     <ClCompile Include="SocketUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ClientJsonHandler.h" />
     <ClInclude Include="ClientPacketHandler.h" />
     <ClInclude Include="CoreMacro.h" />
     <ClInclude Include="CorePch.h" />

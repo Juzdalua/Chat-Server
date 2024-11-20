@@ -54,6 +54,9 @@
     <ClCompile Include="HttpCore.cpp">
       <Filter>HTTPServer</Filter>
     </ClCompile>
+    <ClCompile Include="ClientJsonHandler.cpp">
+      <Filter>TCPServer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IocpCore.h">
@@ -100,6 +103,9 @@
     </ClInclude>
     <ClInclude Include="HttpCore.h">
       <Filter>HTTPServer</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientJsonHandler.h">
+      <Filter>TCPServer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

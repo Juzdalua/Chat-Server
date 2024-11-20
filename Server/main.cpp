@@ -3,6 +3,7 @@
 #include "PacketQueue.h"
 #include "SendQueue.h"
 #include "HttpCore.h"
+#include "ClientJsonHandler.h"
 
 /*
 	API 스레드 1개
@@ -12,6 +13,21 @@
 
 void IocpWorker(shared_ptr<IocpCore> iocpCore);
 void PacketWorker();
+
+void TestJSON()
+{
+	json j = {
+		{"name", "John"},
+		{"age", 30},
+		{"city", "New York"}
+	};
+	cout << DeserializeJson(j) << endl; // JSON -> string
+
+	// JSON 역직렬화
+	string s = R"({"name": "Alice", "age": 25})";
+	json j2 = SserializeJson(s); // string -> JSON
+	cout << "Name: " << j2["name"] << ", Age: " << j2["age"] << endl;
+}
 
 void StartHttpServer()
 {
@@ -36,7 +52,9 @@ void StartHttpServer()
 
 int main()
 {
-	
+	TestJSON();
+	return 0;
+
 	// TCP Server Set
 	shared_ptr<IocpCore> iocpCore = make_shared<IocpCore>();
 	iocpCore->StartServer();
@@ -49,7 +67,7 @@ int main()
 	vector<thread> workers;
 	workers.emplace_back(IocpWorker, iocpCore);
 	workers.emplace_back(PacketWorker);
-	workers.emplace_back(StartHttpServer);
+	//workers.emplace_back(StartHttpServer);
 
 	// Exit
 	for (auto& worker : workers)
