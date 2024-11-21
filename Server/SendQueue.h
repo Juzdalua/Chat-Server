@@ -15,7 +15,7 @@ public:
 	~SendQueue() {};
 
 public:
-	void Push(SendData sendData);
+	void Push(const SendData& sendData);
 	void PopSend();
 	int32 Size() { return _queue.size(); }
 

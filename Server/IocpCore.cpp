@@ -15,6 +15,9 @@ IocpCore::IocpCore(NetAddress address, int32 sessionCount)
 
 IocpCore::~IocpCore()
 {
+	for (AcceptEvent* acceptEvent : _acceptEvents)
+		delete(acceptEvent);
+
 	if (_iocpHandle != NULL)
 		CloseHandle(_iocpHandle);
 
@@ -32,7 +35,7 @@ void IocpCore::AddSession(shared_ptr<Session> session)
 void IocpCore::ReleaseSession(shared_ptr<Session> session)
 {
 	lock_guard<mutex> lock(_lock);
-	ASSERT_CRASH(_sessions.erase(session) != 0);
+	ASSERT_CRASH(_sessions.erase(session) != 0); // TODO error
 	_sessionCount--;
 }
 
@@ -130,36 +133,15 @@ void IocpCore::ProcessAccept(AcceptEvent* acceptEvent)
 	RegisterAccept(acceptEvent);
 }
 
-bool IocpCore::Dispatch(uint32 timeoutMs)
+bool IocpCore::GQCS(uint32 timeoutMs)
 {
 	DWORD numOfBytes = 0;
 	ULONG_PTR key = 0;
 	IocpEvent* iocpEvent = nullptr;
 
-	if(GetQueuedCompletionStatus(_iocpHandle, &numOfBytes, &key, reinterpret_cast<LPOVERLAPPED*>(&iocpEvent), timeoutMs))
+	if (GetQueuedCompletionStatus(_iocpHandle, &numOfBytes, &key, reinterpret_cast<LPOVERLAPPED*>(&iocpEvent), timeoutMs))
 	{
-		switch (iocpEvent->_eventType)
-		{
-		case EventType::Accept:
-			ProcessAccept(static_cast<AcceptEvent*>(iocpEvent));
-			break;
-
-		case EventType::Disconnect:
-			iocpEvent->sessionRef->ProcessDisconnect();
-			ReleaseSession(iocpEvent->sessionRef);
-			break;
-
-		case EventType::Recv:
-			iocpEvent->sessionRef->ProcessRecv(numOfBytes);
-			break;
-
-		case EventType::Send:
-			iocpEvent->sessionRef->ProcessSend(numOfBytes, static_cast<SendEvent*>(iocpEvent)->sendBuffers);
-			break;
-
-		default:
-			break;
-		}
+		Dispatch(iocpEvent, numOfBytes);
 	}
 	else
 	{
@@ -169,12 +151,37 @@ bool IocpCore::Dispatch(uint32 timeoutMs)
 		case WAIT_TIMEOUT:
 			return false;
 
-		case WSA_IO_PENDING:
-			return false;
-
 		default:
-			// 
+			Dispatch(iocpEvent, numOfBytes);
 			break;
 		}
+	}
+}
+
+void IocpCore::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
+{
+	switch (iocpEvent->_eventType)
+	{
+	case EventType::Accept:
+		ProcessAccept(static_cast<AcceptEvent*>(iocpEvent));
+		break;
+
+	case EventType::Disconnect:
+	{
+		ReleaseSession(iocpEvent->sessionRef);
+		iocpEvent->sessionRef->ProcessDisconnect();
+		break;
+	}
+
+	case EventType::Recv:
+		iocpEvent->sessionRef->ProcessRecv(numOfBytes);
+		break;
+
+	case EventType::Send:
+		iocpEvent->sessionRef->ProcessSend(numOfBytes, static_cast<SendEvent*>(iocpEvent)->sendBuffers);
+		break;
+
+	default:
+		break;
 	}
 }

@@ -15,7 +15,7 @@ public:
 	~PacketQueue() {};
 
 public:
-	void Push(PacketData _pkt);
+	void Push(const PacketData& _pkt);
 	void ProcessPacket();
 	int32 Size() { return _queue.size(); }
 

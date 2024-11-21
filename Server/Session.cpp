@@ -13,6 +13,7 @@ Session::Session()
 
 Session::~Session()
 {
+	cout << "Session Close" << '\n';
 	SocketUtils::Close(_clientSocket);
 }
 
@@ -79,7 +80,8 @@ void Session::RegisterRecv()
 		int32 errorCode = WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING)
 		{
-			cout << "WSARecv Error" << '\n';
+			HandleError(errorCode);
+			_recvEvent.sessionRef = nullptr;
 		}
 	}
 }
@@ -117,8 +119,8 @@ void Session::ProcessRecv(int32 numOfBytes)
 int32 Session::OnRecv(BYTE* buffer, int32 len)
 {
 	cout << "OnRecv -> " << buffer << '\n';
-	pktQueue->Push({ buffer, len, shared_from_this() });
-	
+	pktQueue->Push({ buffer, len, shared_from_this() }); // TODO -> session ref count
+
 	return len;
 }
 
@@ -202,7 +204,7 @@ void Session::RegisterSend()
 		int32 errorCode = WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING)
 		{
-			cout << "Send Error" << '\n';
+			HandleError(errorCode);
 			_sendEvent.sessionRef = nullptr;
 			_sendEvent.sendBuffers.clear(); 
 			_sendRegistered.store(false);
@@ -218,7 +220,7 @@ void Session::ProcessSend(int32 numOfBytes, vector<shared_ptr<SendBuffer>> sendV
 
 	if (numOfBytes == 0)
 	{
-		//Disconnect(L"Send 0");
+		Disconnect(L"Send 0");
 		return;
 	}
 	OnSend(numOfBytes, sendVec);
@@ -231,4 +233,23 @@ void Session::ProcessSend(int32 numOfBytes, vector<shared_ptr<SendBuffer>> sendV
 		}
 	}
 	RegisterSend();
+}
+
+void Session::HandleError(int32 errorCode)
+{
+	switch (errorCode)
+	{
+	case WSAECONNRESET:
+	case WSAECONNABORTED:
+	case WSAESHUTDOWN:
+	case ERROR_NETNAME_DELETED:
+		cout << "Close" << '\n';
+		Disconnect(L"HandleError");
+		break;
+
+	default:
+		// TODO: to log therad
+		cout << "Handle Error: " << errorCode << endl;
+		break;
+	}
 }

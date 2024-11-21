@@ -32,7 +32,8 @@ int main()
 	}
 
 	// 2. IP, PORT 설정
-	char IP[] = "127.0.0.1";
+	//char IP[] = "127.0.0.1";
+	char IP[] = "192.168.10.123";
 	u_short PORT = 7777;
 
 	SOCKADDR_IN serverAddr; // IPv4

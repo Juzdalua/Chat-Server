@@ -23,7 +23,8 @@ public:
 	void RegisterAccept(AcceptEvent* acceptEvent);
 	void ProcessAccept(AcceptEvent* acceptEvent);
 
-	bool Dispatch(uint32 timeoutMs = INFINITE);
+	bool GQCS(uint32 timeoutMs = INFINITE);
+	void Dispatch(IocpEvent* iocpEvent, int32 numOfBytes);
 	
 
 private:

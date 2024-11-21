@@ -48,6 +48,8 @@ private:
 	void RegisterSend();
 	void ProcessSend(int32 numOfBytes, vector<shared_ptr<SendBuffer>> sendVec);
 
+	void HandleError(int32 errorCode);
+
 private:
 	void OnConnected();
 	void OnDisconnected();

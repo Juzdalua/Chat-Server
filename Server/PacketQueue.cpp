@@ -4,7 +4,7 @@
 
 unique_ptr<PacketQueue> pktQueue = make_unique<PacketQueue>();
 
-void PacketQueue::Push(PacketData _pkt)
+void PacketQueue::Push(const PacketData& _pkt)
 {
 	lock_guard<mutex> lock(_lock);
 	_queue.push(_pkt);

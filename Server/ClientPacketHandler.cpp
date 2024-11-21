@@ -3,12 +3,12 @@
 #include "SendBuffer.h"
 #include "SendQueue.h"
 
-bool ClientPacketHandler::HandlePacket(BYTE* buffer, int32 len, shared_ptr<Session> session)
+bool ClientPacketHandler::HandlePacket(BYTE* buffer, int32 len, shared_ptr<Session>& session)
 {
 	cout << "Handle Packet = " << buffer << '\n';
 	shared_ptr<SendBuffer> sendBuffer = shared_ptr<SendBuffer>(new SendBuffer(4096));
 	sendBuffer->CopyData(buffer, len);
-	session->Send(sendBuffer);
+	//session->Send(sendBuffer);
 	sendQueue->Push({ sendBuffer, session });
 
 	PacketHeader* recvHeader = reinterpret_cast<PacketHeader*>(buffer);
@@ -23,7 +23,7 @@ bool ClientPacketHandler::HandlePacket(BYTE* buffer, int32 len, shared_ptr<Sessi
 	return false;
 }
 
-bool ClientPacketHandler::HandleTest(BYTE* buffer, int32 len, shared_ptr<Session> session)
+bool ClientPacketHandler::HandleTest(BYTE* buffer, int32 len, shared_ptr<Session>& session)
 {
 	cout << "Handle Test" << '\n';
 	/*Protocol::C_CHAT recvPkt;

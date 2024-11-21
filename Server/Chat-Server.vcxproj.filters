@@ -57,6 +57,12 @@
     <ClCompile Include="ClientJsonHandler.cpp">
       <Filter>TCPServer</Filter>
     </ClCompile>
+    <ClCompile Include="DBConnectionPool.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="DBConnection.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IocpCore.h">
@@ -106,6 +112,12 @@
     </ClInclude>
     <ClInclude Include="ClientJsonHandler.h">
       <Filter>TCPServer</Filter>
+    </ClInclude>
+    <ClInclude Include="DBConnectionPool.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DBConnection.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -4,7 +4,7 @@
 
 unique_ptr<SendQueue> sendQueue = make_unique<SendQueue>();
 
-void SendQueue::Push(SendData sendData)
+void SendQueue::Push(const SendData& sendData)
 {
 	lock_guard<mutex> lock(_lock);
 	_queue.push(sendData);
