@@ -111,9 +111,9 @@ void TestDB()
 
 int main()
 {
-	GDBConnectionPool = new DBConnectionPool;
+	/*GDBConnectionPool = new DBConnectionPool;
 	TestDB();
-	return 0;
+	return 0;*/
 
 	///StartHttpServer();
 

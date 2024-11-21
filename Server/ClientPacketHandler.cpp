@@ -5,7 +5,6 @@
 
 bool ClientPacketHandler::HandlePacket(BYTE* buffer, int32 len, shared_ptr<Session>& session)
 {
-	cout << "Handle Packet = " << buffer << '\n';
 	shared_ptr<SendBuffer> sendBuffer = shared_ptr<SendBuffer>(new SendBuffer(4096));
 	sendBuffer->CopyData(buffer, len);
 	//session->Send(sendBuffer);
