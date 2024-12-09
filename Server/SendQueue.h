@@ -1,11 +1,16 @@
 #pragma once
+#include <memory>
+#include <queue>
+#include <mutex>
+#include "IocpCore.h"
+
 class Session;
 class SendBuffer;
 
 struct SendData
 {
-	shared_ptr<SendBuffer> sendBuffer;
-	shared_ptr<Session> session;
+	std::shared_ptr<SendBuffer> sendBuffer;
+	std::shared_ptr<Session> session;
 };
 
 class SendQueue
@@ -15,13 +20,17 @@ public:
 	~SendQueue() {};
 
 public:
+	int Size() { return _queue.size(); }
+	void SetIocpCore(std::shared_ptr<IocpCore> iocpCore) { _iocpCore = iocpCore; }
+
 	void Push(const SendData& sendData);
 	void PopSend();
-	int32 Size() { return _queue.size(); }
+	void Broadcast(std::shared_ptr<SendBuffer> sendBuffer);
 
+	std::shared_ptr<IocpCore> _iocpCore;
 private:
-	queue<SendData> _queue;
-	mutex _lock;
+	std::queue<SendData> _queue;
+	std::mutex _lock;
 };
 
-extern unique_ptr<SendQueue> sendQueue;
+extern std::unique_ptr<SendQueue> sendQueue;

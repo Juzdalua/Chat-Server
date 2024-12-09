@@ -5,8 +5,8 @@
 
 struct PacketHeader
 {
-	uint16 size; // 패킷 size
-	uint16 id; // 프로토콜 ID (ex 1=로그인, 2=이동요청)
+	UINT size; // 패킷 size
+	UINT id; // 프로토콜 ID (ex 1=로그인, 2=이동요청)
 };
 
 class Session : public enable_shared_from_this<Session>

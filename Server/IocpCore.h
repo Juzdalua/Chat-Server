@@ -26,6 +26,8 @@ public:
 	bool GQCS(uint32 timeoutMs = INFINITE);
 	void Dispatch(IocpEvent* iocpEvent, int32 numOfBytes);
 	
+	bool CanBroadcast() { if (_sessions.size() > 0) return true; return false; }
+	void Broadcast(std::shared_ptr<SendBuffer> sendBuffer);
 
 private:
 	NetAddress _netAddress = {};

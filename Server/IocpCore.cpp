@@ -185,3 +185,12 @@ void IocpCore::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
 		break;
 	}
 }
+
+void IocpCore::Broadcast(std::shared_ptr<SendBuffer> sendBuffer)
+{
+	std::lock_guard<std::mutex> lock(_lock);
+	for (const auto& session : _sessions)
+	{
+		session->Send(sendBuffer);
+	}
+}
