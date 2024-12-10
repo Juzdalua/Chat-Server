@@ -154,10 +154,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ClientJsonHandler.cpp" />
     <ClCompile Include="ClientPacketHandler.cpp" />
     <ClCompile Include="DBConnection.cpp" />
     <ClCompile Include="DBConnectionPool.cpp" />
+    <ClCompile Include="GameData.cpp" />
     <ClCompile Include="HttpCore.cpp" />
     <ClCompile Include="IocpCore.cpp" />
     <ClCompile Include="IocpEvent.cpp" />
@@ -181,12 +181,12 @@
     <ClCompile Include="SocketUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClientJsonHandler.h" />
     <ClInclude Include="ClientPacketHandler.h" />
     <ClInclude Include="CoreMacro.h" />
     <ClInclude Include="CorePch.h" />
     <ClInclude Include="DBConnection.h" />
     <ClInclude Include="DBConnectionPool.h" />
+    <ClInclude Include="GameData.h" />
     <ClInclude Include="HttpCore.h" />
     <ClInclude Include="IocpCore.h" />
     <ClInclude Include="IocpEvent.h" />

@@ -21,5 +21,5 @@ void PacketQueue::ProcessPacket()
 		_queue.pop();
 	}
 
-	ClientPacketHandler::HandlePacket(pkt.buffer, pkt.len, pkt.session);
+	ClientPacketHandler::HandlePacket(pkt);
 }

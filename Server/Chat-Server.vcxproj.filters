@@ -54,15 +54,13 @@
     <ClCompile Include="HttpCore.cpp">
       <Filter>HTTPServer</Filter>
     </ClCompile>
-    <ClCompile Include="ClientJsonHandler.cpp">
-      <Filter>TCPServer</Filter>
-    </ClCompile>
     <ClCompile Include="DBConnectionPool.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="DBConnection.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="GameData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IocpCore.h">
@@ -110,15 +108,13 @@
     <ClInclude Include="HttpCore.h">
       <Filter>HTTPServer</Filter>
     </ClInclude>
-    <ClInclude Include="ClientJsonHandler.h">
-      <Filter>TCPServer</Filter>
-    </ClInclude>
     <ClInclude Include="DBConnectionPool.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="DBConnection.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="GameData.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.gitignore" />

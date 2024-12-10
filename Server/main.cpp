@@ -3,9 +3,9 @@
 #include "PacketQueue.h"
 #include "SendQueue.h"
 #include "HttpCore.h"
-#include "ClientJsonHandler.h"
 #include "DBConnectionPool.h"
 #include "SendBuffer.h"
+#include "ClientPacketHandler.h"
 
 /*
 	클라이언트 IO 수신 및 송신 스레드 1개
@@ -20,21 +20,6 @@ void PacketWorker();
 void SeatingbuckSendData(shared_ptr<IocpCore> iocpCore);
 void SeatingbuckSendData1();
 void SeatingbuckSendData2();
-
-void TestJSON()
-{
-	json j = {
-		{"name", "John"},
-		{"age", 30},
-		{"city", "New York"}
-	};
-	cout << DeserializeJson(j) << endl; // JSON -> string
-
-	// JSON 역직렬화
-	string s = R"({"name": "Alice", "age": 25})";
-	json j2 = SserializeJson(s); // string -> JSON
-	cout << "Name: " << j2["name"] << ", Age: " << j2["age"] << endl;
-}
 
 void StartHttpServer()
 {
