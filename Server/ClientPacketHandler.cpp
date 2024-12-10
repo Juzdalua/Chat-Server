@@ -9,10 +9,9 @@ std::shared_ptr<GameData> gameData;
 void ClientPacketHandler::HandlePacket(PacketData& pkt)
 {
 	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt.buffer);
-	int id = ntohl(recvHheader->id);
-	int size = ntohl(recvHheader->size);
+	cout << "Recv:: " << "id -> " << recvHheader->id << ", size -> " << recvHheader->size << '\n';
 
-	switch (id)
+	switch (recvHheader->id)
 	{
 	case PKT_C_SET_INFO:
 		HandleSetInfo(pkt);
@@ -31,13 +30,15 @@ void ClientPacketHandler::HandlePacket(PacketData& pkt)
 void ClientPacketHandler::HandleSetInfo(PacketData& pkt)
 {
 	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt.buffer);
-	int id = ntohl(recvHheader->id);
-	int size = ntohl(recvHheader->size);
+	int id = recvHheader->id;
+	int size = recvHheader->size;
+	cout << "id -> " << id << ", size -> " << size << '\n';
 
 	PacketHeader header = { 0 };
 	header.id = PKT_S_SET_INFO;
 
 	std::string jsonString(reinterpret_cast<char*>(pkt.buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
+	cout << jsonString << '\n';
 	json jsonData = json::parse(jsonString);
 	gameData->SetMod(jsonData["drivingMode"]);
 	gameData->SetScenarioMap(jsonData["simRacingMap"]);
@@ -83,8 +84,8 @@ void ClientPacketHandler::HandleMDAQData(PacketData& pkt)
 void ClientPacketHandler::HandleDrivingState(PacketData& pkt)
 {
 	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt.buffer);
-	int id = ntohl(recvHheader->id);
-	int size = ntohl(recvHheader->size);
+	int id = recvHheader->id;
+	int size = recvHheader->size;
 
 	PacketHeader header = { 0 };
 	header.id = PKT_S_DRIVING_STATE;

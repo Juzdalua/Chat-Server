@@ -118,7 +118,7 @@ void Session::ProcessRecv(int32 numOfBytes)
 
 int32 Session::OnRecv(BYTE* buffer, int32 len)
 {
-	cout << "OnRecv -> " << buffer << '\n';
+	//cout << "OnRecv -> " << buffer << '\n';
 	pktQueue->Push({ buffer, len, shared_from_this() }); // TODO -> session ref count
 
 	return len;
@@ -131,7 +131,7 @@ int32 Session::OnSend(int32 len, vector<shared_ptr<SendBuffer>> sendVec)
 		shared_ptr<Session> session = shared_from_this();
 		PacketHeader* recvHeader = reinterpret_cast<PacketHeader*>(sendVec.back()->Buffer());
 
-		cout << "Send len = " << len << '\n';
+		//cout << "Send len = " << len << '\n';
 		//HandlePacketStartLog("SEND", LogColor::BLUE, recvHeader, session);
 	}
 

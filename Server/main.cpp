@@ -125,7 +125,7 @@ int main()
 	vector<thread> workers;
 	workers.emplace_back(IocpWorker, iocpCore);
 	workers.emplace_back(PacketWorker);
-	workers.emplace_back(SeatingbuckSendData, iocpCore);
+	//workers.emplace_back(SeatingbuckSendData, iocpCore);
 	//workers.emplace_back(StartHttpServer);
 
 	// Exit
@@ -213,7 +213,7 @@ void SeatingbuckSendData1()
 	header.size = sizeof(PacketHeader) + jsonSize;
 	header.id = 6000;
 
-	cout << "Header Size -> " << sizeof(PacketHeader) << ", id -> " << header.id << ", size -> " << header.size << '\n';
+	//cout << "Header Size -> " << sizeof(PacketHeader) << ", id -> " << header.id << ", size -> " << header.size << '\n';
 
 	// buffer에 데이터 복사
 	std::vector<unsigned char> buffer(header.size);
@@ -350,7 +350,7 @@ void SeatingbuckSendData2()
 	header.size = sizeof(PacketHeader) + jsonSize;
 	header.id = 6001;
 
-	cout << "Header Size -> " << sizeof(PacketHeader) << ", id -> " << header.id << ", size -> " << header.size << '\n';
+	//cout << "Header Size -> " << sizeof(PacketHeader) << ", id -> " << header.id << ", size -> " << header.size << '\n';
 
 	std::vector<unsigned char> buffer(totalPacketSize);
 	memcpy(buffer.data(), &header, sizeof(PacketHeader));
