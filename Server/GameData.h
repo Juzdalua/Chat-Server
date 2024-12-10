@@ -74,7 +74,7 @@ enum class Status : UINT
 };
 
 
-class GameData : public std::enable_shared_from_this<GameData>
+class GameData
 {
 public:
 	GameData();
@@ -116,8 +116,7 @@ private:
 
 	Section _section = Section::Empty;
 	Status _status = Status::Empty;
-
-	std::shared_ptr<GameData> _gameData;
 };
 
-extern std::shared_ptr<GameData> gameData;
+//extern std::shared_ptr<GameData> gameData;
+extern GameData* gameData;

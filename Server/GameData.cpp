@@ -1,9 +1,11 @@
 #include "pch.h"
 #include "GameData.h"
 
+//shared_ptr<GameData> gameData;
+GameData* gameData = nullptr;
+
 GameData::GameData()
 {
-	_gameData = shared_from_this();
 }
 
 GameData::~GameData()
@@ -37,5 +39,4 @@ void GameData::Clear()
 
 void GameData::Destroy()
 {
-	if (_gameData) _gameData = nullptr;
 }

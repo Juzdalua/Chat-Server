@@ -14,13 +14,11 @@
 using namespace std;
 using json = nlohmann::json;
 
-#pragma pack(1)  // 1바이트 정렬
 struct PacketHeader
 {
 	UINT size; // 패킷 size
 	UINT id; // 프로토콜 ID (ex 1=로그인, 2=이동요청)
 };
-#pragma pack()  // 기본 정렬으로 되돌림
 
 
 void EchoClient(SOCKET& clientSocket)
@@ -109,6 +107,39 @@ void RawRecv(SOCKET& clientSocket)
 {
 	while (true)
 	{
+		//SEND
+		json jsonData = {
+			{"drivingMode", 1},
+			{"drivingMap" , 0},
+			{"simRacingMap" , 0},
+			{"weather" , 0},{"time" , 0},
+			{"traffic" , 0},
+			{"carSelection" , 0 },
+			{"pageNum", 2},
+		};
+		std::string jsonString = jsonData.dump(); // JSON -> String
+		UINT jsonSize = static_cast<UINT>(jsonString.size());
+		int totalPacketSize = jsonSize + sizeof(PacketHeader);
+
+		UINT id = 7000U;
+		PacketHeader sendHeader = { 0 };
+		sendHeader.id = id;
+		sendHeader.size = sizeof(PacketHeader) + jsonString.size();
+		cout << "SEND => "<< ", ID -> " << sendHeader.id << ", SIZE -> " << sendHeader.size << '\n';
+
+		char sendBuffer[4096] = "";
+		memcpy(sendBuffer, &sendHeader, sizeof(PacketHeader));
+		memcpy(sendBuffer + sizeof(PacketHeader), jsonString.data(), jsonSize);
+
+		int resultCode = send(clientSocket, sendBuffer, totalPacketSize, 0);
+		if (resultCode == SOCKET_ERROR)
+		{
+			int errCode = WSAGetLastError();
+			cout << "Send ErrorCode: " << errCode << endl;
+			return;
+		}
+
+		// RECV
 		char recvBuffer[4096];
 		int recvLen = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
 		if (recvLen <= 0)
@@ -121,8 +152,8 @@ void RawRecv(SOCKET& clientSocket)
 		PacketHeader* header = reinterpret_cast<PacketHeader*>(recvBuffer);
 
 		cout << "LEN => " << recvLen << ", ID -> " << header->id << ", SIZE -> " << header->size << '\n';
-		
-		 // JSON 데이터 추출
+
+		// JSON 데이터 추출
 		int headerSize = sizeof(PacketHeader);
 		if (recvLen > headerSize)
 		{
@@ -195,7 +226,7 @@ int main()
 	//RecvClient(clientSocket);
 	RawRecv(clientSocket);
 
-	while (true) {}
+	//while (true) {}
 
 	// 5. Socket 종료
 	closesocket(clientSocket);

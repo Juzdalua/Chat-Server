@@ -6,6 +6,7 @@
 #include "DBConnectionPool.h"
 #include "SendBuffer.h"
 #include "ClientPacketHandler.h"
+#include "GameData.h"
 
 /*
 	클라이언트 IO 수신 및 송신 스레드 1개
@@ -120,6 +121,7 @@ int main()
 	iocpCore->StartAccept();
 
 	sendQueue->SetIocpCore(iocpCore);
+	gameData = new GameData;
 
 	// Thread
 	vector<thread> workers;
@@ -135,6 +137,8 @@ int main()
 			worker.join();
 	}
 	delete GDBConnectionPool;
+
+	delete gameData;
 
 	return 0;
 }

@@ -8,16 +8,15 @@ using json = nlohmann::json;
 
 enum : UINT
 {
-	PKT_C_SET_INFO = 5000,
-	PKT_S_SET_INFO = 5001,
-
-	PKT_S_SEATINGBUCK_HANDLE = 6000, // broadcast this mfc program
+	PKT_C_SET_INFO = 5000, // ivi -> server
+	PKT_S_SET_INFO = 5001, // server -> ue
 
 	PKT_C_SEATINGBUCK_BUTTON = 6001, // recv from mdaq
-	PKT_S_SEATINGBUCK_BUTTON = 6002, // broadcast mdaq data
+	PKT_S_SEATINGBUCK_BUTTON = 6000, // broadcast mdaq data
+	PKT_S_SEATINGBUCK_HANDLE = 6002, // broadcast this mfc program
 
-	PKT_C_DRIVING_STATE = 6003,
-	PKT_S_DRIVING_STATE = 6004,
+	PKT_C_DRIVING_STATE = 7000, // ue -> server
+	PKT_S_DRIVING_STATE = 7001, // server -> ivi
 };
 
 class ClientPacketHandler

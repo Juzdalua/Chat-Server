@@ -21457,7 +21457,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     // (they seemingly cannot be constrained to resolve the ambiguity)
     template<typename T>
     reference operator[](T* key)
-    {
+     {
         return operator[](typename object_t::key_type(key));
     }
 

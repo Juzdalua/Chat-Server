@@ -4,14 +4,15 @@
 #include "SendQueue.h"
 #include "GameData.h"
 
-std::shared_ptr<GameData> gameData;
-
 void ClientPacketHandler::HandlePacket(PacketData& pkt)
 {
 	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt.buffer);
-	cout << "Recv:: " << "id -> " << recvHheader->id << ", size -> " << recvHheader->size << '\n';
+	int id = recvHheader->id;
+	int size = recvHheader->size;
 
-	switch (recvHheader->id)
+	cout << "RECV:: id -> " << id << ", size -> " << size << '\n';
+
+	switch (id)
 	{
 	case PKT_C_SET_INFO:
 		HandleSetInfo(pkt);
@@ -22,7 +23,7 @@ void ClientPacketHandler::HandlePacket(PacketData& pkt)
 		break;
 
 	case PKT_C_DRIVING_STATE:
-
+		HandleDrivingState(pkt);
 		break;
 	}
 }
@@ -32,21 +33,19 @@ void ClientPacketHandler::HandleSetInfo(PacketData& pkt)
 	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt.buffer);
 	int id = recvHheader->id;
 	int size = recvHheader->size;
-	cout << "id -> " << id << ", size -> " << size << '\n';
 
 	PacketHeader header = { 0 };
 	header.id = PKT_S_SET_INFO;
 
 	std::string jsonString(reinterpret_cast<char*>(pkt.buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
-	cout << jsonString << '\n';
 	json jsonData = json::parse(jsonString);
-	gameData->SetMod(jsonData["drivingMode"]);
-	gameData->SetScenarioMap(jsonData["simRacingMap"]);
-	gameData->SetSimMap(jsonData["drivingMap"]);
-	gameData->SetWeatherType(jsonData["weather"]);
-	gameData->SetTimeType(jsonData["time"]);
-	gameData->SetTrafficType(jsonData["traffic"]);
-	gameData->SetCarType(jsonData["carSelection"]);
+	gameData->SetMod(static_cast<Mod>(jsonData["drivingMode"]));
+	gameData->SetScenarioMap(static_cast<ScenarioMap>(jsonData["simRacingMap"]));
+	gameData->SetSimMap(static_cast<SimMap>(jsonData["drivingMap"]));
+	gameData->SetWeatherType(static_cast<WeatherType>(jsonData["weather"]));
+	gameData->SetTimeType(static_cast<TimeType>(jsonData["time"]));
+	gameData->SetTrafficType(static_cast<TrafficType>(jsonData["traffic"]));
+	gameData->SetCarType(static_cast<CarType>(jsonData["carSelection"]));
 
 	//json jsonData = {
 	//	{"result", {
@@ -93,13 +92,25 @@ void ClientPacketHandler::HandleDrivingState(PacketData& pkt)
 	std::string jsonString(reinterpret_cast<char*>(pkt.buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
 	json jsonData = json::parse(jsonString);
 
-	gameData->SetSection(jsonData["section"]);
+	int pageNum = 1;
+	try
+	{
+		pageNum = jsonData["pageNum"];
+	}
+	catch (const std::exception&)
+	{
+		pageNum = 1;
+	}
+	jsonData["pageNum"] = pageNum;
+	jsonString = jsonData.dump();
+
+	/*gameData->SetSection(jsonData["section"]);
 	gameData->SetStatus(jsonData["status"]);
 
 	if (gameData->GetStatus() == Status::Done)
 	{
 		gameData->Clear();
-	}
+	}*/
 
 	Broadcast(header, jsonString);
 }
