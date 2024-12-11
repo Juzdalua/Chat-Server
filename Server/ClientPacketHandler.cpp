@@ -9,6 +9,12 @@ void ClientPacketHandler::HandlePacket(PacketData& pkt)
 	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt.buffer);
 	int id = recvHheader->id;
 	int size = recvHheader->size;
+	/*cout << "RECV 1:: id -> " << id << ", size -> " << size << '\n';
+	if (id > 10'000 || id < 0)
+	{
+		id = ntohl(recvHheader->id);
+		size = ntohl(recvHheader->size);
+	}*/
 
 	cout << "RECV:: id -> " << id << ", size -> " << size << '\n';
 
@@ -47,6 +53,11 @@ void ClientPacketHandler::HandleSetInfo(PacketData& pkt)
 	gameData->SetTrafficType(static_cast<TrafficType>(jsonData["traffic"]));
 	gameData->SetCarType(static_cast<CarType>(jsonData["carSelection"]));
 
+	if (!jsonData.contains("pageNum")) jsonData["pageNum"] = 1;
+	json resultJson;
+	resultJson["result"] = jsonData;
+	jsonString = resultJson.dump();
+
 	//json jsonData = {
 	//	{"result", {
 	//		{"map", "pkt"},
@@ -69,8 +80,8 @@ void ClientPacketHandler::HandleSetInfo(PacketData& pkt)
 void ClientPacketHandler::HandleMDAQData(PacketData& pkt)
 {
 	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt.buffer);
-	int id = ntohl(recvHheader->id);
-	int size = ntohl(recvHheader->size);
+	int id = recvHheader->id;
+	int size = recvHheader->size;
 
 	PacketHeader header = { 0 };
 	header.id = PKT_S_SEATINGBUCK_BUTTON;
@@ -91,18 +102,9 @@ void ClientPacketHandler::HandleDrivingState(PacketData& pkt)
 
 	std::string jsonString(reinterpret_cast<char*>(pkt.buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
 	json jsonData = json::parse(jsonString);
-
-	int pageNum = 1;
-	try
-	{
-		pageNum = jsonData["pageNum"];
-	}
-	catch (const std::exception&)
-	{
-		pageNum = 1;
-	}
-	jsonData["pageNum"] = pageNum;
-	jsonString = jsonData.dump();
+	json resultJson;
+	resultJson["result"] = jsonData;
+	jsonString = resultJson.dump();
 
 	/*gameData->SetSection(jsonData["section"]);
 	gameData->SetStatus(jsonData["status"]);

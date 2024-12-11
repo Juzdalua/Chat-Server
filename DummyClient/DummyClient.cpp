@@ -10,7 +10,6 @@
 #include <thread>
 #include <json.hpp>
 
-
 using namespace std;
 using json = nlohmann::json;
 
@@ -37,7 +36,7 @@ void EchoClient(SOCKET& clientSocket)
 		if (resultCode == SOCKET_ERROR)
 		{
 			int errCode = WSAGetLastError();
-			cout << "Send ErrorCode: " << errCode << endl;
+			cout << "Send ErrorCode: " << errCode << '\n';
 			return;
 		}
 
@@ -47,12 +46,12 @@ void EchoClient(SOCKET& clientSocket)
 		if (recvLen <= 0)
 		{
 			int errCode = WSAGetLastError();
-			cout << "Recv ErrorCode: " << errCode << endl;
+			cout << "Recv ErrorCode: " << errCode << '\n';
 			return;
 		}
 
-		cout << "Recv Data! Len = " << recvLen << endl;
-		cout << "Recv Data! Data = " << recvBuffer << endl;
+		cout << "Recv Data! Len = " << recvLen << '\n';
+		cout << "Recv Data! Data = " << recvBuffer << '\n';
 	}
 }
 
@@ -68,7 +67,7 @@ void RecvClient(SOCKET& clientSocket)
 		while (totalReceived < headerSize) {
 			int received = recv(clientSocket, reinterpret_cast<char*>(buffer) + totalReceived, headerSize - totalReceived, 0);
 			if (received <= 0) {
-				cerr << "Header Recv Error or Connection Closed!" << endl;
+				cerr << "Header Recv Error or Connection Closed!" << '\n';
 				return;
 			}
 			totalReceived += received;
@@ -77,7 +76,7 @@ void RecvClient(SOCKET& clientSocket)
 		// 2. 헤더 파싱
 		PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
 		int totalPacketSize = header->size;  // 헤더에 정의된 전체 패킷 크기
-		cout << "Recv Packet Size: " << totalPacketSize << endl;
+		cout << "Recv Packet Size: " << totalPacketSize << '\n';
 
 		// 3. 본문 수신
 		totalReceived = 0;
@@ -85,7 +84,7 @@ void RecvClient(SOCKET& clientSocket)
 			int received = recv(clientSocket, reinterpret_cast<char*>(buffer) + headerSize + totalReceived,
 				totalPacketSize - headerSize - totalReceived, 0);
 			if (received <= 0) {
-				cerr << "Data Recv Error or Connection Closed!" << endl;
+				cerr << "Data Recv Error or Connection Closed!" << '\n';
 				return;
 			}
 			totalReceived += received;
@@ -95,37 +94,40 @@ void RecvClient(SOCKET& clientSocket)
 		string jsonData(reinterpret_cast<char*>(buffer) + headerSize, totalPacketSize - headerSize); // 헤더 이후 데이터 추출
 		try {
 			json parsedData = json::parse(jsonData);
-			cout << "Data: " << parsedData.dump(4) << endl;
+			cout << "Data: " << parsedData.dump(4) << '\n';
 		}
 		catch (exception& e) {
-			cerr << "JSON Parsing Error: " << e.what() << endl;
+			cerr << "JSON Parsing Error: " << e.what() << '\n';
 		}
 	}
 }
 
-void RawRecv(SOCKET& clientSocket)
+void RawSend(SOCKET& clientSocket)
 {
 	while (true)
 	{
-		//SEND
+		this_thread::sleep_for(1s);
+
 		json jsonData = {
-			{"drivingMode", 1},
+			{"drivingMode", 0},
 			{"drivingMap" , 0},
 			{"simRacingMap" , 0},
-			{"weather" , 0},{"time" , 0},
+			{"weather" , 0},
+			{"time" , 0},
 			{"traffic" , 0},
 			{"carSelection" , 0 },
-			{"pageNum", 2},
+			{"pageNum", 0},
 		};
+
 		std::string jsonString = jsonData.dump(); // JSON -> String
 		UINT jsonSize = static_cast<UINT>(jsonString.size());
 		int totalPacketSize = jsonSize + sizeof(PacketHeader);
 
-		UINT id = 7000U;
+		UINT id = 5000U;
 		PacketHeader sendHeader = { 0 };
 		sendHeader.id = id;
 		sendHeader.size = sizeof(PacketHeader) + jsonString.size();
-		cout << "SEND => "<< ", ID -> " << sendHeader.id << ", SIZE -> " << sendHeader.size << '\n';
+		cout << "SEND => " << ", ID -> " << sendHeader.id << ", SIZE -> " << sendHeader.size << '\n';
 
 		char sendBuffer[4096] = "";
 		memcpy(sendBuffer, &sendHeader, sizeof(PacketHeader));
@@ -135,23 +137,29 @@ void RawRecv(SOCKET& clientSocket)
 		if (resultCode == SOCKET_ERROR)
 		{
 			int errCode = WSAGetLastError();
-			cout << "Send ErrorCode: " << errCode << endl;
+			cout << "Send ErrorCode: " << errCode << '\n';
 			return;
 		}
+	}
+}
 
+void RawRecv(SOCKET& clientSocket)
+{
+	while (true)
+	{
 		// RECV
 		char recvBuffer[4096];
 		int recvLen = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
 		if (recvLen <= 0)
 		{
 			int errCode = WSAGetLastError();
-			cout << "Recv ErrorCode: " << errCode << endl;
+			cout << "Recv ErrorCode: " << errCode << '\n';
 			return;
 		}
 
 		PacketHeader* header = reinterpret_cast<PacketHeader*>(recvBuffer);
 
-		cout << "LEN => " << recvLen << ", ID -> " << header->id << ", SIZE -> " << header->size << '\n';
+		cout << '\n' << "LEN => " << recvLen << ", ID -> " << header->id << ", SIZE -> " << header->size << '\n';
 
 		// JSON 데이터 추출
 		int headerSize = sizeof(PacketHeader);
@@ -166,6 +174,100 @@ void RawRecv(SOCKET& clientSocket)
 		}
 	}
 }
+
+void SendTestInput(SOCKET& clientSocket)
+{
+	int pageNum = 0;
+	json jsonData = {
+			{"drivingMode", 0},
+			{"drivingMap" , 0},
+			{"simRacingMap" , 0},
+			{"weather" , 0},
+			{"time" , 0},
+			{"traffic" , 0},
+			{"carSelection" , 0 },
+			{"pageNum", 0},
+	};
+
+	while (true)
+	{
+		int input;
+		cin >> input;
+
+		if (pageNum > 4) break;
+
+		switch (pageNum)
+		{
+		case 0:
+			if (input >= 1 && input <= 2) jsonData["drivingMode"] = input;
+			else jsonData["drivingMode"] = 1;
+			pageNum++;
+			break;
+		
+		case 1:
+			if (jsonData["drivingMode"] == 1)
+			{
+				if (input >= 1 && input <= 2) jsonData["drivingMap"] = input;
+				else jsonData["drivingMap"] = 1;
+				jsonData["simRacingMap"] = 0;
+			}
+			else if (jsonData["drivingMode"] == 2)
+			{
+				if (input >= 1 && input <= 4) jsonData["simRacingMap"] = input;
+				else jsonData["simRacingMap"] = 1;
+				jsonData["drivingMap"] = 0;
+			}
+			pageNum++;
+			break;
+		
+		case 2:
+			if (input >= 1 && input <= 2) jsonData["weather"] = input;
+			else jsonData["weather"] = 1;
+			pageNum++;
+			break;
+
+		case 3:
+			int input2, input3;
+			cin >> input2 >> input3;
+
+			if (input >= 1 && input <= 2) jsonData["time"] = input;
+			else jsonData["time"] = 1;
+
+			if (input2 >= 1 && input2 <= 3) jsonData["traffic"] = input2;
+			else jsonData["traffic"] = 1;
+
+			if (input3 >= 1 && input3 <= 2) jsonData["carSelection"] = input3;
+			else jsonData["carSelection"] = 1;
+			pageNum++;
+			break;
+		}
+
+		jsonData["pageNum"] = pageNum;
+
+		std::string jsonString = jsonData.dump(); // JSON -> String
+		UINT jsonSize = static_cast<UINT>(jsonString.size());
+		int totalPacketSize = jsonSize + sizeof(PacketHeader);
+
+		UINT id = 5000U;
+		PacketHeader sendHeader = { 0 };
+		sendHeader.id = id;
+		sendHeader.size = sizeof(PacketHeader) + jsonString.size();
+		cout << "SEND => " << ", ID -> " << sendHeader.id << ", SIZE -> " << sendHeader.size << '\n';
+
+		char sendBuffer[4096] = "";
+		memcpy(sendBuffer, &sendHeader, sizeof(PacketHeader));
+		memcpy(sendBuffer + sizeof(PacketHeader), jsonString.data(), jsonSize);
+
+		int resultCode = send(clientSocket, sendBuffer, totalPacketSize, 0);
+		if (resultCode == SOCKET_ERROR)
+		{
+			int errCode = WSAGetLastError();
+			cout << "Send ErrorCode: " << errCode << '\n';
+			return;
+		}
+	}
+}
+
 
 int main()
 {
@@ -185,7 +287,7 @@ int main()
 	if (clientSocket == INVALID_SOCKET)
 	{
 		int errCode = WSAGetLastError();
-		cout << "Socket ErrorCode: " << errCode << endl;
+		cout << "Socket ErrorCode: " << errCode << '\n';
 		return 0;
 	}
 
@@ -215,20 +317,28 @@ int main()
 	if (connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
 	{
 		int errCode = WSAGetLastError();
-		cout << "Socket ErrorCode: " << errCode << endl;
+		cout << "Socket ErrorCode: " << errCode << '\n';
 		return 0;
 	}
 
-	cout << "Connected To Server!" << endl;
+	cout << "Connected To Server!" << '\n';
 
 	// 4. 데이터 송수신
 	//EchoClient(clientSocket);
 	//RecvClient(clientSocket);
-	RawRecv(clientSocket);
+	//RawRecv(clientSocket);
 
-	//while (true) {}
+	vector<thread> clientWorkers;
+	clientWorkers.emplace_back(RawRecv, ref(clientSocket));
+	//clientWorkers.emplace_back(RawSend, ref(clientSocket));
+	//clientWorkers.emplace_back(SendTestInput, ref(clientSocket));
 
 	// 5. Socket 종료
+	for (auto& worker : clientWorkers)
+	{
+		if (worker.joinable())
+			worker.join();
+	}
 	closesocket(clientSocket);
 	WSACleanup();
 
