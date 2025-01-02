@@ -10,6 +10,8 @@ enum : UINT
 {
 	PKT_C_SET_INFO = 5000, // ivi -> server
 	PKT_S_SET_INFO = 5001, // server -> ue
+	PKT_C_DrivingStatus = 5002,
+	PKT_S_DrivingStatus = 5003,
 
 	PKT_C_SEATINGBUCK_BUTTON = 6001, // recv from mdaq
 	PKT_S_SEATINGBUCK_BUTTON = 6000, // broadcast mdaq data

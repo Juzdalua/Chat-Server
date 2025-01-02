@@ -22,16 +22,26 @@ void ClientPacketHandler::HandlePacket(PacketData& pkt)
 	{
 	case PKT_C_SET_INFO:
 		HandleSetInfo(pkt);
-		break;
+		return;
 
 	case PKT_C_SEATINGBUCK_BUTTON:
 		HandleMDAQData(pkt);
-		break;
+		return;
 
 	case PKT_C_DRIVING_STATE:
 		HandleDrivingState(pkt);
-		break;
+		return;
 	}
+
+	PacketHeader header = { 0 };
+	header.id = id;
+
+	std::string jsonString(reinterpret_cast<char*>(pkt.buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
+	json jsonData = json::parse(jsonString);
+	json resultJson;
+	resultJson["result"] = jsonData;
+	jsonString = resultJson.dump();
+	Broadcast(header, jsonString);
 }
 
 void ClientPacketHandler::HandleSetInfo(PacketData& pkt)

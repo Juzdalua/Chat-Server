@@ -102,7 +102,53 @@ void RecvClient(SOCKET& clientSocket)
 	}
 }
 
-void RawSend(SOCKET& clientSocket)
+void RawSendVelocity7000(SOCKET& clientSocket)
+{
+	while (true)
+	{
+		this_thread::sleep_for(1s);
+
+		/*json jsonData = {
+			{"drivingMode", 0},
+			{"drivingMap" , 0},
+			{"simRacingMap" , 0},
+			{"weather" , 0},
+			{"time" , 0},
+			{"traffic" , 0},
+			{"carSelection" , 0 },
+			{"pageNum", 0},
+		};*/
+
+		json jsonData = {
+			{"velocity", 16.32f},
+		};
+
+		std::string jsonString = jsonData.dump(); // JSON -> String
+		UINT jsonSize = static_cast<UINT>(jsonString.size());
+		int totalPacketSize = jsonSize + sizeof(PacketHeader);
+
+		//UINT id = 5000U;
+		UINT id = 7000U;
+		PacketHeader sendHeader = { 0 };
+		sendHeader.id = id;
+		sendHeader.size = sizeof(PacketHeader) + jsonString.size();
+		cout << "SEND => " << ", ID -> " << sendHeader.id << ", SIZE -> " << sendHeader.size << '\n';
+
+		char sendBuffer[4096] = "";
+		memcpy(sendBuffer, &sendHeader, sizeof(PacketHeader));
+		memcpy(sendBuffer + sizeof(PacketHeader), jsonString.data(), jsonSize);
+
+		int resultCode = send(clientSocket, sendBuffer, totalPacketSize, 0);
+		if (resultCode == SOCKET_ERROR)
+		{
+			int errCode = WSAGetLastError();
+			cout << "Send ErrorCode: " << errCode << '\n';
+			return;
+		}
+	}
+}
+
+void RawSendSet5000(SOCKET& clientSocket)
 {
 	while (true)
 	{
@@ -124,6 +170,42 @@ void RawSend(SOCKET& clientSocket)
 		int totalPacketSize = jsonSize + sizeof(PacketHeader);
 
 		UINT id = 5000U;
+		PacketHeader sendHeader = { 0 };
+		sendHeader.id = id;
+		sendHeader.size = sizeof(PacketHeader) + jsonString.size();
+		cout << "SEND => " << ", ID -> " << sendHeader.id << ", SIZE -> " << sendHeader.size << '\n';
+
+		char sendBuffer[4096] = "";
+		memcpy(sendBuffer, &sendHeader, sizeof(PacketHeader));
+		memcpy(sendBuffer + sizeof(PacketHeader), jsonString.data(), jsonSize);
+
+		int resultCode = send(clientSocket, sendBuffer, totalPacketSize, 0);
+		if (resultCode == SOCKET_ERROR)
+		{
+			int errCode = WSAGetLastError();
+			cout << "Send ErrorCode: " << errCode << '\n';
+			return;
+		}
+	}
+}
+
+void RawSendTest(SOCKET& clientSocket)
+{
+	while (true)
+	{
+		this_thread::sleep_for(1s);
+
+		json jsonData = {
+			{"test1", 0},
+			{"test2" , "abcd"},
+			{"test3" , 'Z'},
+		};
+
+		std::string jsonString = jsonData.dump(); // JSON -> String
+		UINT jsonSize = static_cast<UINT>(jsonString.size());
+		int totalPacketSize = jsonSize + sizeof(PacketHeader);
+
+		UINT id = 1231U;
 		PacketHeader sendHeader = { 0 };
 		sendHeader.id = id;
 		sendHeader.size = sizeof(PacketHeader) + jsonString.size();
@@ -174,100 +256,6 @@ void RawRecv(SOCKET& clientSocket)
 		}
 	}
 }
-
-void SendTestInput(SOCKET& clientSocket)
-{
-	int pageNum = 0;
-	json jsonData = {
-			{"drivingMode", 0},
-			{"drivingMap" , 0},
-			{"simRacingMap" , 0},
-			{"weather" , 0},
-			{"time" , 0},
-			{"traffic" , 0},
-			{"carSelection" , 0 },
-			{"pageNum", 0},
-	};
-
-	while (true)
-	{
-		int input;
-		cin >> input;
-
-		if (pageNum > 4) break;
-
-		switch (pageNum)
-		{
-		case 0:
-			if (input >= 1 && input <= 2) jsonData["drivingMode"] = input;
-			else jsonData["drivingMode"] = 1;
-			pageNum++;
-			break;
-		
-		case 1:
-			if (jsonData["drivingMode"] == 1)
-			{
-				if (input >= 1 && input <= 2) jsonData["drivingMap"] = input;
-				else jsonData["drivingMap"] = 1;
-				jsonData["simRacingMap"] = 0;
-			}
-			else if (jsonData["drivingMode"] == 2)
-			{
-				if (input >= 1 && input <= 4) jsonData["simRacingMap"] = input;
-				else jsonData["simRacingMap"] = 1;
-				jsonData["drivingMap"] = 0;
-			}
-			pageNum++;
-			break;
-		
-		case 2:
-			if (input >= 1 && input <= 2) jsonData["weather"] = input;
-			else jsonData["weather"] = 1;
-			pageNum++;
-			break;
-
-		case 3:
-			int input2, input3;
-			cin >> input2 >> input3;
-
-			if (input >= 1 && input <= 2) jsonData["time"] = input;
-			else jsonData["time"] = 1;
-
-			if (input2 >= 1 && input2 <= 3) jsonData["traffic"] = input2;
-			else jsonData["traffic"] = 1;
-
-			if (input3 >= 1 && input3 <= 2) jsonData["carSelection"] = input3;
-			else jsonData["carSelection"] = 1;
-			pageNum++;
-			break;
-		}
-
-		jsonData["pageNum"] = pageNum;
-
-		std::string jsonString = jsonData.dump(); // JSON -> String
-		UINT jsonSize = static_cast<UINT>(jsonString.size());
-		int totalPacketSize = jsonSize + sizeof(PacketHeader);
-
-		UINT id = 5000U;
-		PacketHeader sendHeader = { 0 };
-		sendHeader.id = id;
-		sendHeader.size = sizeof(PacketHeader) + jsonString.size();
-		cout << "SEND => " << ", ID -> " << sendHeader.id << ", SIZE -> " << sendHeader.size << '\n';
-
-		char sendBuffer[4096] = "";
-		memcpy(sendBuffer, &sendHeader, sizeof(PacketHeader));
-		memcpy(sendBuffer + sizeof(PacketHeader), jsonString.data(), jsonSize);
-
-		int resultCode = send(clientSocket, sendBuffer, totalPacketSize, 0);
-		if (resultCode == SOCKET_ERROR)
-		{
-			int errCode = WSAGetLastError();
-			cout << "Send ErrorCode: " << errCode << '\n';
-			return;
-		}
-	}
-}
-
 
 int main()
 {
@@ -330,8 +318,9 @@ int main()
 
 	vector<thread> clientWorkers;
 	clientWorkers.emplace_back(RawRecv, ref(clientSocket));
-	//clientWorkers.emplace_back(RawSend, ref(clientSocket));
-	//clientWorkers.emplace_back(SendTestInput, ref(clientSocket));
+	//clientWorkers.emplace_back(RawSendSet5000, ref(clientSocket));
+	//clientWorkers.emplace_back(RawSendVelocity7000, ref(clientSocket));
+	//clientWorkers.emplace_back(RawSendTest, ref(clientSocket));
 
 	// 5. Socket 종료
 	for (auto& worker : clientWorkers)
