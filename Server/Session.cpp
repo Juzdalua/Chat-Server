@@ -2,8 +2,9 @@
 #include "Session.h"
 #include "SocketUtils.h"
 #include "SendBuffer.h"
-#include "ClientPacketHandler.h"
+#include <MSWSock.h>
 #include "PacketQueue.h"
+//#include "ClientPacketHandler.h"
 
 Session::Session()
 	:_recvBuffer(BUFFER_SIZE)
@@ -13,7 +14,8 @@ Session::Session()
 
 Session::~Session()
 {
-	cout << "Session Close" << '\n';
+	//Utils::AlertOK(_T("Session Close"), MB_ICONINFORMATION);
+
 	SocketUtils::Close(_clientSocket);
 }
 
@@ -29,7 +31,7 @@ bool Session::Disconnect(const WCHAR* cause)
 
 	if (false == SocketUtils::DisconnectEx(_clientSocket, &_disconnectEvent, TF_REUSE_SOCKET, 0))
 	{
-		int32 errorCode = WSAGetLastError();
+		int errorCode = WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING)
 		{
 			_disconnectEvent.sessionRef = nullptr;
@@ -70,14 +72,12 @@ void Session::RegisterRecv()
 	WSABUF wsaBuf;
 	wsaBuf.buf = reinterpret_cast<char*>(_recvBuffer.WritePos());
 	wsaBuf.len = _recvBuffer.FreeSize();
-
 	DWORD numOfBytes = 0;
 	DWORD flags = 0;
 
-
 	if (WSARecv(_clientSocket, &wsaBuf, 1, &numOfBytes, &flags, &_recvEvent, nullptr) == SOCKET_ERROR)
 	{
-		int32 errorCode = WSAGetLastError();
+		int errorCode = WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING)
 		{
 			HandleError(errorCode);
@@ -86,23 +86,24 @@ void Session::RegisterRecv()
 	}
 }
 
-void Session::ProcessRecv(int32 numOfBytes)
+void Session::ProcessRecv(int numOfBytes)
 {
 	_recvEvent.sessionRef = nullptr;
+
 	if (numOfBytes == 0)
 	{
 		Disconnect(L"Recv 0");
 		return;
 	}
-	
+
 	if (_recvBuffer.OnWrite(numOfBytes) == false)
 	{
 		Disconnect(L"OnWrite Overflow");
 		return;
 	}
-	
-	int32 dataSize = _recvBuffer.DataSize();
-	int32 processLen = OnRecv(_recvBuffer.ReadPos(), dataSize);
+
+	int dataSize = _recvBuffer.DataSize();
+	int processLen = OnRecv(_recvBuffer.ReadPos(), dataSize);
 
 	if (processLen < 0 || dataSize < processLen || _recvBuffer.OnRead(processLen) == false)
 	{
@@ -116,48 +117,73 @@ void Session::ProcessRecv(int32 numOfBytes)
 	RegisterRecv();
 }
 
-int32 Session::OnRecv(BYTE* buffer, int32 len)
+int Session::OnRecv(unsigned char* buffer, int len)
 {
-	//cout << "OnRecv -> " << buffer << '\n';
-	pktQueue->Push({ buffer, len, shared_from_this() }); // TODO -> session ref count
+	int processLen = 0;
+	while (true)
+	{
+		int dataSize = len - processLen;
 
-	return len;
+		// 최소 헤더 크기만큼은 있어야한다. => 헤더 파싱
+		if (dataSize < sizeof(PacketHeader))
+			break;
+
+		// *((PacketHeader*)&buffer[0])
+		PacketHeader header = *(reinterpret_cast<PacketHeader*>(&buffer[processLen]));
+
+		// 헤더에 기록된 패킷 크기를 파싱할 수 있어야 한다.
+		if (dataSize < header.size)
+			break;
+
+		// 패킷 조립 성공
+		//pktQueue->Push({ buffer, len, nullptr });
+
+		std::shared_ptr<PacketData> packetData = std::make_shared<PacketData>();
+		packetData->buffer = buffer + processLen;  // 데이터 버퍼
+		packetData->len = header.size;
+		pktQueue->Push(packetData);
+
+		processLen += header.size;
+	}
+
+	return processLen;
 }
 
-int32 Session::OnSend(int32 len, vector<shared_ptr<SendBuffer>> sendVec)
+int Session::OnSend(int len, std::vector<std::shared_ptr<SendBuffer>> sendVec)
 {
-	if (sendVec.size() > 0)
+	/*if (sendVec.size() > 0)
 	{
-		shared_ptr<Session> session = shared_from_this();
+		std::shared_ptr<Session> session = shared_from_this();
 		PacketHeader* recvHeader = reinterpret_cast<PacketHeader*>(sendVec.back()->Buffer());
 
-		//cout << "Send len = " << len << '\n';
-		//HandlePacketStartLog("SEND", LogColor::BLUE, recvHeader, session);
-	}
+		CString msg;
+		msg.Format(_T("Send len = %d"), len);
+		Utils::AlertOK(msg, MB_ICONINFORMATION);
+	}*/
 
 	return len;
 }
 
 void Session::OnConnected()
 {
-	cout << "OnConnected" << '\n';
+	//Utils::AlertOK(_T("OnConnected"), MB_ICONINFORMATION);
 }
 
 void Session::OnDisconnected()
 {
-	cout << "OnDisconnected" << '\n';
+	//Utils::AlertOK(_T("OnDisconnected"), MB_ICONINFORMATION);
 }
 
 /*----------------
 	Send
 ----------------*/
-void Session::Send(shared_ptr<SendBuffer> sendBuffer)
+void Session::Send(std::shared_ptr<SendBuffer> sendBuffer)
 {
 	if (IsConnected() == false) return;
 
 	bool registerSend = false;
 	{
-		lock_guard<mutex> lock(_lock);
+		std::lock_guard<std::mutex> lock(_lock);
 		_sendQueue.push(sendBuffer);
 		if (_sendRegistered.exchange(true) == false)
 			registerSend = true;
@@ -173,12 +199,12 @@ void Session::RegisterSend()
 	_sendEvent.Init();
 	_sendEvent.sessionRef = shared_from_this();
 	{
-		lock_guard<mutex> lock(_lock);
-		int32 writeSize = 0;
+		std::lock_guard<std::mutex> lock(_lock);
+		int writeSize = 0;
 
 		while (_sendQueue.empty() == false)
 		{
-			shared_ptr<SendBuffer> sendBuffer = _sendQueue.front();
+			std::shared_ptr<SendBuffer> sendBuffer = _sendQueue.front();
 
 			writeSize += sendBuffer->WriteSize();
 			// TODO 예외체크 -> 센드버퍼보다 데이터 크기가 클 경우
@@ -188,9 +214,9 @@ void Session::RegisterSend()
 		}
 	}
 
-	vector<WSABUF> wsaBufs;
+	std::vector<WSABUF> wsaBufs;
 	wsaBufs.reserve(_sendEvent.sendBuffers.size());
-	for (shared_ptr<SendBuffer> sendBuffer : _sendEvent.sendBuffers)
+	for (std::shared_ptr<SendBuffer> sendBuffer : _sendEvent.sendBuffers)
 	{
 		WSABUF wsaBuf;
 		wsaBuf.buf = reinterpret_cast<char*>(sendBuffer->Buffer());
@@ -201,19 +227,19 @@ void Session::RegisterSend()
 	DWORD numOfBytes = 0;
 	if (SOCKET_ERROR == WSASend(_clientSocket, wsaBufs.data(), static_cast<DWORD>(wsaBufs.size()), OUT & numOfBytes, 0, &_sendEvent, nullptr))
 	{
-		int32 errorCode = WSAGetLastError();
+		int errorCode = WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING)
 		{
 			HandleError(errorCode);
 			_sendEvent.sessionRef = nullptr;
-			_sendEvent.sendBuffers.clear(); 
+			_sendEvent.sendBuffers.clear();
 			_sendRegistered.store(false);
 
 		}
 	}
 }
 
-void Session::ProcessSend(int32 numOfBytes, vector<shared_ptr<SendBuffer>> sendVec)
+void Session::ProcessSend(int numOfBytes, std::vector<std::shared_ptr<SendBuffer>> sendVec)
 {
 	_sendEvent.sessionRef = nullptr;
 	_sendEvent.sendBuffers.clear();
@@ -225,8 +251,8 @@ void Session::ProcessSend(int32 numOfBytes, vector<shared_ptr<SendBuffer>> sendV
 	}
 	OnSend(numOfBytes, sendVec);
 	{
-		lock_guard<mutex> lock(_lock);
-		if (_sendQueue.empty()) 
+		std::lock_guard<std::mutex> lock(_lock);
+		if (_sendQueue.empty())
 		{
 			_sendRegistered.store(false);
 			return;
@@ -235,7 +261,7 @@ void Session::ProcessSend(int32 numOfBytes, vector<shared_ptr<SendBuffer>> sendV
 	RegisterSend();
 }
 
-void Session::HandleError(int32 errorCode)
+void Session::HandleError(int errorCode)
 {
 	switch (errorCode)
 	{
@@ -243,13 +269,19 @@ void Session::HandleError(int32 errorCode)
 	case WSAECONNABORTED:
 	case WSAESHUTDOWN:
 	case ERROR_NETNAME_DELETED:
-		cout << "Close" << '\n';
+	{
+		/*CString msg;
+		msg.Format(_T("Close: %d"), errorCode);
+		Utils::AlertOK(msg, MB_ICONERROR);*/
 		Disconnect(L"HandleError");
 		break;
+	}
 
 	default:
 		// TODO: to log therad
-		cout << "Handle Error: " << errorCode << endl;
+		/*CString msg;
+		msg.Format(_T("Handle Error: %d"), errorCode);
+		Utils::AlertOK(msg, MB_ICONERROR);*/
 		break;
 	}
 }

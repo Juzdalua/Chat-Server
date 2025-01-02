@@ -2,14 +2,26 @@
 #include "RecvBuffer.h"
 #include "IocpEvent.h"
 #include "NetAddress.h"
+#include <memory>
+#include <vector>
+#include <atomic>
+#include <queue>
+#include <mutex>
 
 struct PacketHeader
 {
-	UINT size; // 패킷 size
-	UINT id; // 프로토콜 ID (ex 1=로그인, 2=이동요청)
+	UINT size;
+	UINT id;
 };
 
-class Session : public enable_shared_from_this<Session>
+enum class ServiceType : UINT
+{
+	Server,
+	Client,
+};
+
+
+class Session : public std::enable_shared_from_this<Session>
 {
 	friend class IocpCore;
 	friend class IocpEvent;
@@ -27,6 +39,8 @@ public:
 	SOCKET GetClientSocket() { return _clientSocket; }
 	SOCKADDR_IN GetClientAddr() { return _clientAddr; }
 
+	void SetServiceType(ServiceType type) { _serviceType = type; }
+
 	void SetNetAddress(NetAddress address) { _netAddress = address; }
 	NetAddress GetAddress() { return _netAddress; }
 
@@ -34,7 +48,7 @@ public:
 
 public:
 	bool Disconnect(const WCHAR* cause);
-	void Send(shared_ptr<SendBuffer> sendBuffer);
+	void Send(std::shared_ptr<SendBuffer> sendBuffer);
 
 private:
 	HANDLE GetHandle() { return reinterpret_cast<HANDLE>(_clientSocket); }
@@ -43,23 +57,24 @@ private:
 	void ProcessDisconnect();
 
 	void RegisterRecv();
-	void ProcessRecv(int32 numOfBytes);
+	void ProcessRecv(int numOfBytes);
 
 	void RegisterSend();
-	void ProcessSend(int32 numOfBytes, vector<shared_ptr<SendBuffer>> sendVec);
+	void ProcessSend(int numOfBytes, std::vector<std::shared_ptr<SendBuffer>> sendVec);
 
-	void HandleError(int32 errorCode);
+	void HandleError(int errorCode);
 
 private:
 	void OnConnected();
 	void OnDisconnected();
-	int32 OnRecv(BYTE* buffer, int32 len);
-	int32 OnSend(int32 len, vector<shared_ptr<SendBuffer>> sendVec);
+	int OnRecv(unsigned char* buffer, int len);
+	int OnSend(int len, std::vector<std::shared_ptr<SendBuffer>> sendVec);
 
 private:
 	NetAddress _netAddress = {};
+	ServiceType _serviceType = ServiceType::Client;
 
-	atomic<bool> _connected = false;
+	std::atomic<bool> _connected = false;
 	SOCKET _clientSocket = INVALID_SOCKET;
 	SOCKADDR_IN _clientAddr;
 
@@ -69,9 +84,9 @@ private:
 	SendEvent _sendEvent;
 
 	RecvBuffer _recvBuffer;
-	queue<shared_ptr<SendBuffer>> _sendQueue;
-	atomic<bool> _sendRegistered = false;
+	std::queue<std::shared_ptr<SendBuffer>> _sendQueue;
+	std::atomic<bool> _sendRegistered = false;
 
-	mutex _lock;
+	std::mutex _lock;
 };
 

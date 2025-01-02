@@ -4,9 +4,7 @@
 #include "Session.h"
 #include "SocketUtils.h"
 
-int PORT = 7777;
-
-IocpCore::IocpCore(NetAddress address, int32 sessionCount)
+IocpCore::IocpCore(NetAddress address, int sessionCount)
 	:_netAddress(address), _sessionCount(sessionCount)
 {
 	SocketUtils::Init();
@@ -15,34 +13,57 @@ IocpCore::IocpCore(NetAddress address, int32 sessionCount)
 
 IocpCore::~IocpCore()
 {
-	for (AcceptEvent* acceptEvent : _acceptEvents)
+	/*for (AcceptEvent* acceptEvent : _acceptEvents)
 		delete(acceptEvent);
 
 	if (_iocpHandle != NULL)
 		CloseHandle(_iocpHandle);
 
 	SocketUtils::Clear();
+	SocketUtils::Close(_listenSocket);*/
+}
+
+void IocpCore::Clear()
+{
+	for (AcceptEvent* acceptEvent : _acceptEvents)
+		delete(acceptEvent);
+	for (std::shared_ptr<Session> session : _sessions)
+	{
+		ReleaseSession(session);
+	}
+
+	if (_iocpHandle != NULL)
+	{
+		CloseHandle(_iocpHandle);
+		_iocpHandle = NULL;
+	}
+
+	SocketUtils::Clear();
 	SocketUtils::Close(_listenSocket);
 }
 
-void IocpCore::AddSession(shared_ptr<Session> session)
+void IocpCore::AddSession(std::shared_ptr<Session> session)
 {
-	lock_guard<mutex> lock(_lock);
+	std::lock_guard<std::mutex> lock(_lock);
 	_sessionCount++;
 	_sessions.insert(session);
 }
 
-void IocpCore::ReleaseSession(shared_ptr<Session> session)
+void IocpCore::ReleaseSession(std::shared_ptr<Session> session)
 {
-	lock_guard<mutex> lock(_lock);
-	ASSERT_CRASH(_sessions.erase(session) != 0); // TODO error
+	std::lock_guard<std::mutex> lock(_lock);
+	//ASSERT(_sessions.erase(session) != 0); // TODO error
+	_sessions.erase(session);
 	_sessionCount--;
 }
 
-void IocpCore::HandleError(string errorMsg)
+void IocpCore::HandleError(std::string errorMsg)
 {
 	int errorCode = WSAGetLastError();
-	cout << errorMsg << ", Code: " << errorCode << '\n';
+
+	/*CString msg;
+	msg.Format(_T("Failed, Code: %d"), errorCode);
+	Utils::AlertOK(msg, MB_ICONERROR);*/
 }
 
 void IocpCore::SetSocketOption()
@@ -61,8 +82,10 @@ bool IocpCore::StartServer()
 	_listenSocket = SocketUtils::CreateSocket();
 	if (_listenSocket == INVALID_SOCKET)
 	{
-		int32 errorCode = WSAGetLastError();
-		cout << errorCode << endl;
+		int errorCode = WSAGetLastError();
+		/*CString msg;
+		msg.Format(_T("Failed to start server: %d"), errorCode);
+		Utils::AlertOK(msg, MB_ICONERROR);*/
 		return false;
 	}
 
@@ -71,13 +94,13 @@ bool IocpCore::StartServer()
 	if (SocketUtils::Bind(_listenSocket, GetNetAddress()) == false) return false;
 	if (SocketUtils::Listen(_listenSocket) == false) return false;
 
-	cout << "Server Set Done" << '\n';
+	//Utils::AlertOK(_T("Server Set Done"), MB_ICONINFORMATION);
 	return true;
 }
 
-shared_ptr<Session> IocpCore::CreateSession()
+std::shared_ptr<Session> IocpCore::CreateSession()
 {
-	shared_ptr<Session> session = make_shared<Session>();
+	std::shared_ptr<Session> session = std::make_shared<Session>();
 	CreateIoCompletionPort(session->GetHandle(), _iocpHandle, 0, 0);
 
 	return session;
@@ -93,14 +116,14 @@ void IocpCore::StartAccept()
 
 void IocpCore::RegisterAccept(AcceptEvent* acceptEvent)
 {
-	shared_ptr<Session> session = CreateSession();
+	std::shared_ptr<Session> session = CreateSession();
 	acceptEvent->Init();
 	acceptEvent->sessionRef = session;
 	DWORD bytesReceived = 0;
 
 	if (false == SocketUtils::AcceptEx(_listenSocket, session->GetClientSocket(), session->_recvBuffer.WritePos(), 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, &bytesReceived, static_cast<LPOVERLAPPED>(acceptEvent)))
 	{
-		const int32 errorCode = WSAGetLastError();
+		const int errorCode = WSAGetLastError();
 
 		if (errorCode != WSA_IO_PENDING)
 		{
@@ -112,7 +135,7 @@ void IocpCore::RegisterAccept(AcceptEvent* acceptEvent)
 
 void IocpCore::ProcessAccept(AcceptEvent* acceptEvent)
 {
-	shared_ptr<Session> session = acceptEvent->sessionRef;
+	std::shared_ptr<Session> session = acceptEvent->sessionRef;
 	if (false == SocketUtils::SetUpdateAcceptSocket(session->GetClientSocket(), _listenSocket))
 	{
 		RegisterAccept(acceptEvent);
@@ -120,7 +143,7 @@ void IocpCore::ProcessAccept(AcceptEvent* acceptEvent)
 	}
 
 	SOCKADDR_IN sockAddress;
-	int32 sizeOfSockAddr = sizeof(sockAddress);
+	int sizeOfSockAddr = sizeof(sockAddress);
 	if (SOCKET_ERROR == getpeername(session->GetClientSocket(), OUT reinterpret_cast<SOCKADDR*>(&sockAddress), &sizeOfSockAddr))
 	{
 		RegisterAccept(acceptEvent);
@@ -133,7 +156,7 @@ void IocpCore::ProcessAccept(AcceptEvent* acceptEvent)
 	RegisterAccept(acceptEvent);
 }
 
-bool IocpCore::GQCS(uint32 timeoutMs)
+bool IocpCore::GQCS(UINT timeoutMs)
 {
 	DWORD numOfBytes = 0;
 	ULONG_PTR key = 0;
@@ -158,7 +181,7 @@ bool IocpCore::GQCS(uint32 timeoutMs)
 	}
 }
 
-void IocpCore::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
+void IocpCore::Dispatch(IocpEvent* iocpEvent, int numOfBytes)
 {
 	switch (iocpEvent->_eventType)
 	{

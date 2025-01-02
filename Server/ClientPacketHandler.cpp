@@ -4,19 +4,19 @@
 #include "SendQueue.h"
 #include "GameData.h"
 
-void ClientPacketHandler::HandlePacket(PacketData& pkt)
+void ClientPacketHandler::HandlePacket(std::shared_ptr<PacketData> pkt)
 {
-	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt.buffer);
+	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt->buffer);
+	/*int id = ntohl(recvHheader->id);
+	int size = ntohl(recvHheader->size);*/
+
 	int id = recvHheader->id;
 	int size = recvHheader->size;
-	/*cout << "RECV 1:: id -> " << id << ", size -> " << size << '\n';
-	if (id > 10'000 || id < 0)
+	/*if (id > 10'000 || id < 0)
 	{
 		id = ntohl(recvHheader->id);
 		size = ntohl(recvHheader->size);
 	}*/
-
-	cout << "RECV:: id -> " << id << ", size -> " << size << '\n';
 
 	switch (id)
 	{
@@ -31,29 +31,40 @@ void ClientPacketHandler::HandlePacket(PacketData& pkt)
 	case PKT_C_DRIVING_STATE:
 		HandleDrivingState(pkt);
 		return;
+
+	case PKT_C_AUTO_DRIVE:
+		HandleAutoDrive(pkt);
+		return;
+
+	case PKT_C_DONE_AUTO_DRIVE:
+		HandleDoneAutoDrive(pkt);
+		return;
 	}
 
 	PacketHeader header = { 0 };
 	header.id = id;
 
-	std::string jsonString(reinterpret_cast<char*>(pkt.buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
+	std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
 	json jsonData = json::parse(jsonString);
 	json resultJson;
 	resultJson["result"] = jsonData;
 	jsonString = resultJson.dump();
 	Broadcast(header, jsonString);
+	jsonData.clear();
+	resultJson.clear();
+	jsonString.clear();
 }
 
-void ClientPacketHandler::HandleSetInfo(PacketData& pkt)
+void ClientPacketHandler::HandleSetInfo(std::shared_ptr<PacketData> pkt)
 {
-	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt.buffer);
+	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt->buffer);
 	int id = recvHheader->id;
 	int size = recvHheader->size;
 
 	PacketHeader header = { 0 };
 	header.id = PKT_S_SET_INFO;
 
-	std::string jsonString(reinterpret_cast<char*>(pkt.buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
+	std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
 	json jsonData = json::parse(jsonString);
 	gameData->SetMod(static_cast<Mod>(jsonData["drivingMode"]));
 	gameData->SetScenarioMap(static_cast<ScenarioMap>(jsonData["simRacingMap"]));
@@ -85,32 +96,42 @@ void ClientPacketHandler::HandleSetInfo(PacketData& pkt)
 	//};
 	//std::string jsonString = jsonData.dump(); // JSON -> String
 	Broadcast(header, jsonString);
+	jsonData.clear();
+	resultJson.clear();
+	jsonString.clear();
 }
 
-void ClientPacketHandler::HandleMDAQData(PacketData& pkt)
+void ClientPacketHandler::HandleMDAQData(std::shared_ptr<PacketData> pkt)
 {
-	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt.buffer);
+	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt->buffer);
 	int id = recvHheader->id;
 	int size = recvHheader->size;
 
 	PacketHeader header = { 0 };
 	header.id = PKT_S_SEATINGBUCK_BUTTON;
 
-	std::string jsonString(reinterpret_cast<char*>(pkt.buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
+	std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
+	json jsonData = json::parse(jsonString);
+	json resultJson;
+	resultJson["result"] = jsonData;
+	jsonString = resultJson.dump();
 
 	Broadcast(header, jsonString);
+	jsonData.clear();
+	resultJson.clear();
+	jsonString.clear();
 }
 
-void ClientPacketHandler::HandleDrivingState(PacketData& pkt)
+void ClientPacketHandler::HandleDrivingState(std::shared_ptr<PacketData> pkt)
 {
-	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt.buffer);
+	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt->buffer);
 	int id = recvHheader->id;
 	int size = recvHheader->size;
 
 	PacketHeader header = { 0 };
 	header.id = PKT_S_DRIVING_STATE;
 
-	std::string jsonString(reinterpret_cast<char*>(pkt.buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
+	std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
 	json jsonData = json::parse(jsonString);
 	json resultJson;
 	resultJson["result"] = jsonData;
@@ -125,6 +146,19 @@ void ClientPacketHandler::HandleDrivingState(PacketData& pkt)
 	}*/
 
 	Broadcast(header, jsonString);
+	jsonData.clear();
+	resultJson.clear();
+	jsonString.clear();
+}
+
+void ClientPacketHandler::HandleAutoDrive(std::shared_ptr<PacketData> pkt)
+{
+	//theDlg.AutoDrive(pkt);
+}
+
+void ClientPacketHandler::HandleDoneAutoDrive(std::shared_ptr<PacketData> pkt)
+{
+	//theDlg.DoneAutoDrive(pkt);
 }
 
 void ClientPacketHandler::Broadcast(PacketHeader& header, std::string& jsonString)
@@ -137,43 +171,14 @@ void ClientPacketHandler::Broadcast(PacketHeader& header, std::string& jsonStrin
 	memcpy(buffer.data(), &header, sizeof(PacketHeader));
 	memcpy(buffer.data() + sizeof(PacketHeader), jsonString.data(), jsonSize);
 
-	std::shared_ptr<SendBuffer> sendBuffer = std::shared_ptr<SendBuffer>(new SendBuffer(4096));
+	std::shared_ptr<SendBuffer> sendBuffer = std::make_shared<SendBuffer>(4096);
 	/*reinterpret_cast<PacketHeader*>(sendBuffer->Buffer())->id = id;
 	reinterpret_cast<PacketHeader*>(sendBuffer->Buffer())->size = size;*/
 
 	sendBuffer->CopyData(buffer.data(), totalPacketSize);
 	sendQueue->Push({ sendBuffer, nullptr });
-
 	/*CString testMsg;
 	testMsg.Format(_T("id: %d, size: %d / id: %d, size: %d"), id, size, reinterpret_cast<PacketHeader*>(sendBuffer->Buffer())->id, reinterpret_cast<PacketHeader*>(sendBuffer->Buffer())->size);
 	Utils::AlertOK(testMsg, MB_ICONINFORMATION);*/
 }
 
-/*----------------------------------------------------------
-	JSON Function
-----------------------------------------------------------*/
-json SserializeJson(const std::string& message)
-{
-	return json::parse(message);
-}
-
-// string s = R"({"name": "Alice", "age": 25})";
-std::string DeserializeJson(const json& jsonString)
-{
-	return jsonString.dump();
-}
-
-void TestJSON()
-{
-	json j = {
-		{"name", "John"},
-		{"age", 30},
-		{"city", "New York"}
-	};
-	//cout << DeserializeJson(j) << endl; // JSON -> string
-
-	// JSON 역직렬화
-	std::string s = R"({"name": "Alice", "age": 25})";
-	json j2 = SserializeJson(s); // string -> JSON
-	//cout << "Name: " << j2["name"] << ", Age: " << j2["age"] << endl;
-}

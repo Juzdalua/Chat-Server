@@ -12,7 +12,7 @@ void SendQueue::Push(const SendData& sendData)
 
 void SendQueue::PopSend()
 {
-	SendData sendData;
+	SendData sendData = { 0 };
 	{
 		std::lock_guard<std::mutex> lock(_lock);
 		if (_queue.empty()) return;
@@ -21,16 +21,18 @@ void SendQueue::PopSend()
 		_queue.pop();
 	}
 
-	if (sendData.session != nullptr)
-		sendData.session->Send(sendData.sendBuffer);
-	Broadcast(sendData.sendBuffer);
+	if (sendData.session != nullptr) sendData.session->Send(sendData.sendBuffer);
+	else Broadcast(sendData.sendBuffer);
+
+	sendData.sendBuffer = nullptr;
+	sendData.session = nullptr;
 }
 
 void SendQueue::Broadcast(std::shared_ptr<SendBuffer> sendBuffer)
 {
 	if (_iocpCore == nullptr)
 	{
-		cout << "Broadcast Set Error." << '\n';
+		//Utils::AlertOK(_T("Broadcast Set Error."), MB_ICONERROR);
 		return;
 	}
 	_iocpCore->Broadcast(sendBuffer);

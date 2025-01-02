@@ -44,9 +44,25 @@ void StartHttpServer()
 
 void TestDB()
 {
-	const WCHAR* cs = L"Driver={MySQL ODBC 9.1 Unicode Driver};Server=127.0.0.1;Database=testhdi;UID=root;PWD=tomatosoup1!";
+	//const WCHAR* cs = L"Driver={MySQL ODBC 9.1 Unicode Driver};Server=127.0.0.1;Database=testhdi;UID=root;PWD=tomatosoup1!";
+
+	const WCHAR* driverString = L"Driver={MySQL ODBC 9.1 Unicode Driver}";
+	const WCHAR* serverString = L"Server=127.0.0.1";
+	const WCHAR* databaseString = L"Database=testhdi";
+	const WCHAR* usernameString = L"UID=root";
+	const WCHAR* passwordString = L"PWD=tomatosoup1!";
+
+	const wstring connectionString =
+		wstring(driverString) + L";" +
+		wstring(driverString) + L";" +
+		wstring(serverString) + L";" +
+		wstring(databaseString) + L";" +
+		wstring(usernameString) + L";" +
+		wstring(passwordString);
+
 	int32 MAX_DB_CONNECTION = 1;
-	ASSERT_CRASH(GDBConnectionPool->Connect(MAX_DB_CONNECTION, cs));
+	//ASSERT_CRASH(GDBConnectionPool->Connect(MAX_DB_CONNECTION, cs));
+	ASSERT_CRASH(GDBConnectionPool->Connect(MAX_DB_CONNECTION, connectionString.c_str()));
 
 	// Write
 	{
@@ -55,9 +71,10 @@ void TestDB()
 
 		WCHAR insertName[100] = L"KJ";
 		SQLLEN insertNameLen = 0;
+		dbConn->BindParam(1, insertName, &insertNameLen);
+
 		int32 insertAge = 30;
 		SQLLEN insertAgeLen = 0;
-		dbConn->BindParam(1, insertName, &insertNameLen);
 		dbConn->BindParam(2, &insertAge, &insertAgeLen);
 		/*dbConn->BindParam(1, SQL_C_WCHAR, SQL_WCHAR, sizeof(insertName), &insertName, &insertNameLen);
 		dbConn->BindParam(2, SQL_C_LONG, SQL_INTEGER, sizeof(insertAge), &insertAge, &insertAgeLen);*/
@@ -165,7 +182,7 @@ void SeatingbuckSendData(shared_ptr<IocpCore> iocpCore)
 	while (true)
 	{
 		this_thread::sleep_for(1s);
-		if (iocpCore->CanBroadcast())
+		if (iocpCore->GetCurrentSessionCount() > 0)
 		{
 			SeatingbuckSendData1();
 			SeatingbuckSendData2();
@@ -339,16 +356,7 @@ void SeatingbuckSendData2()
 	};
 
 	std::string jsonString = jsonData.dump(); // JSON -> String
-	try {
-		json::parse(jsonString); // JSON 파싱 시도
-	}
-	catch (json::parse_error& e) {
-		cout << e.what() << '\n';
-		return;
-	}
-
 	UINT jsonSize = static_cast<UINT>(jsonString.size());
-	int totalPacketSize = jsonSize + sizeof(PacketHeader);
 
 	PacketHeader header = { 0 };
 	header.size = sizeof(PacketHeader) + jsonSize;
@@ -356,11 +364,14 @@ void SeatingbuckSendData2()
 
 	//cout << "Header Size -> " << sizeof(PacketHeader) << ", id -> " << header.id << ", size -> " << header.size << '\n';
 
-	std::vector<unsigned char> buffer(totalPacketSize);
+	std::vector<unsigned char> buffer(header.size);
 	memcpy(buffer.data(), &header, sizeof(PacketHeader));
 	memcpy(buffer.data() + sizeof(PacketHeader), jsonString.data(), jsonSize);
 
-	std::shared_ptr<SendBuffer> sendBuffer = std::shared_ptr<SendBuffer>(new SendBuffer(4096));
-	sendBuffer->CopyData(buffer.data(), totalPacketSize);
+	std::shared_ptr<SendBuffer> sendBuffer = std::make_shared<SendBuffer>(4096);
+	sendBuffer->CopyData(buffer.data(), header.size);
 	sendQueue->Push({ sendBuffer, nullptr });
+
+	jsonData.clear();
+	jsonString.clear();
 }

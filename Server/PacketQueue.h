@@ -1,11 +1,12 @@
 #pragma once
+
 class Session;
 
 struct PacketData
 {
 	BYTE* buffer;
-	int32 len;
-	shared_ptr<Session> session;
+	int len;
+	std::shared_ptr<Session> session;
 };
 
 class PacketQueue
@@ -15,13 +16,15 @@ public:
 	~PacketQueue() {};
 
 public:
-	void Push(const PacketData& _pkt);
+	//void Push(const PacketData& _pkt);
+	void Push(const std::shared_ptr<PacketData> _pkt);
 	void ProcessPacket();
-	int32 Size() { return _queue.size(); }
+	int Size() { return _queue.size(); }
 
 private:
-	queue<PacketData> _queue;
-	mutex _lock;
+	//std::queue<PacketData> _queue;
+	std::queue<std::shared_ptr<PacketData>> _queue;
+	std::mutex _lock;
 };
 
-extern unique_ptr<PacketQueue> pktQueue;
+extern std::unique_ptr<PacketQueue> pktQueue;
