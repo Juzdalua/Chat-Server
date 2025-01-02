@@ -48,9 +48,9 @@ void TestDB()
 
 	const WCHAR* driverString = L"Driver={MySQL ODBC 9.1 Unicode Driver}";
 	const WCHAR* serverString = L"Server=127.0.0.1";
-	const WCHAR* databaseString = L"Database=testhdi";
+	const WCHAR* databaseString = L"Database=test";
 	const WCHAR* usernameString = L"UID=root";
-	const WCHAR* passwordString = L"PWD=tomatosoup1!";
+	const WCHAR* passwordString = L"PWD=test";
 
 	const wstring connectionString =
 		wstring(driverString) + L";" +
@@ -217,16 +217,6 @@ void SeatingbuckSendData1()
 		}}
 	};
 	std::string jsonString = jsonData.dump(); // JSON -> String
-
-	// JSON 문자열이 유효한지 파싱해서 확인
-	try {
-		json::parse(jsonString);
-	}
-	catch (json::parse_error& e) {
-		cout << e.what() << '\n';
-		return;
-	}
-
 	UINT jsonSize = static_cast<UINT>(jsonString.size());
 
 	// 패킷 헤더 생성
@@ -241,9 +231,12 @@ void SeatingbuckSendData1()
 	memcpy(buffer.data(), &header, sizeof(PacketHeader));
 	memcpy(buffer.data() + sizeof(PacketHeader), jsonString.data(), jsonSize);
 
-	std::shared_ptr<SendBuffer> sendBuffer = std::shared_ptr<SendBuffer>(new SendBuffer(4096));
+	std::shared_ptr<SendBuffer> sendBuffer = std::make_shared<SendBuffer>(4096);
 	sendBuffer->CopyData(buffer.data(), header.size);
 	sendQueue->Push({ sendBuffer, nullptr });
+
+	jsonData.clear();
+	jsonString.clear();
 }
 void SeatingbuckSendData2()
 {
