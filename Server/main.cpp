@@ -61,10 +61,10 @@ void TestDB()
 	wstring passwordString = wstring(L"PWD=") + std::wstring().assign(dbPwd.begin(), dbPwd.end());
 
 	const wstring connectionString =
-		wstring(driverString) + L";" +
-		wstring(serverString) + L";" +
-		wstring(databaseString) + L";" +
-		wstring(usernameString) + L";" +
+		driverString + L";" +
+		serverString + L";" +
+		databaseString + L";" +
+		usernameString + L";" +
 		passwordString;
 
 	int32 MAX_DB_CONNECTION = 1;
