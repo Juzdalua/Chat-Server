@@ -7,6 +7,7 @@
 #include "SendBuffer.h"
 #include "ClientPacketHandler.h"
 #include "GameData.h"
+#include "Utils.h"
 
 /*
 	클라이언트 IO 수신 및 송신 스레드 1개
@@ -44,24 +45,29 @@ void StartHttpServer()
 
 void TestDB()
 {
-	//const WCHAR* cs = L"Driver={MySQL ODBC 9.1 Unicode Driver};Server=127.0.0.1;Database=testhdi;UID=root;PWD=tomatosoup1!";
+	//const WCHAR* cs = L"Driver={[DRIVER]};Server=[IP];Database=[DB];UID=[USERNAME];PWD=[PASSWORD]";
+	//ASSERT_CRASH(GDBConnectionPool->Connect(MAX_DB_CONNECTION, cs));
 
-	const WCHAR* driverString = L"Driver={MySQL ODBC 9.1 Unicode Driver}";
-	const WCHAR* serverString = L"Server=127.0.0.1";
-	const WCHAR* databaseString = L"Database=test";
-	const WCHAR* usernameString = L"UID=root";
-	const WCHAR* passwordString = L"PWD=test";
+	const string dbDriver = Utils::getEnv("DB_DRIVER");
+	const string dbServer = Utils::getEnv("DB_SERVER");
+	const string dbDatabase = Utils::getEnv("DB_DATABASE");
+	const string dbUsername = Utils::getEnv("DB_USERNAME");
+	const string dbPwd = Utils::getEnv("DB_PASSWORD");
+
+	wstring driverString = wstring(L"Driver={") + std::wstring().assign(dbDriver.begin(), dbDriver.end())+wstring(L"}");
+	wstring serverString = wstring(L"Server=") + std::wstring().assign(dbServer.begin(), dbServer.end());
+	wstring databaseString = wstring(L"Database=") + std::wstring().assign(dbDatabase.begin(), dbDatabase.end());
+	wstring usernameString = wstring(L"UID=") + std::wstring().assign(dbUsername.begin(), dbUsername.end());
+	wstring passwordString = wstring(L"PWD=") + std::wstring().assign(dbPwd.begin(), dbPwd.end());
 
 	const wstring connectionString =
-		wstring(driverString) + L";" +
 		wstring(driverString) + L";" +
 		wstring(serverString) + L";" +
 		wstring(databaseString) + L";" +
 		wstring(usernameString) + L";" +
-		wstring(passwordString);
+		passwordString;
 
 	int32 MAX_DB_CONNECTION = 1;
-	//ASSERT_CRASH(GDBConnectionPool->Connect(MAX_DB_CONNECTION, cs));
 	ASSERT_CRASH(GDBConnectionPool->Connect(MAX_DB_CONNECTION, connectionString.c_str()));
 
 	// Write
@@ -121,6 +127,8 @@ void TestDB()
 
 int main()
 {
+	Utils::Init();
+
 	GDBConnectionPool = new DBConnectionPool;
 	TestDB();
 	return 0;

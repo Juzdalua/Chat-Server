@@ -61,6 +61,7 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="GameData.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IocpCore.h">
@@ -115,8 +116,11 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="GameData.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.gitignore" />
+    <None Include="..\.env" />
+    <None Include="..\.env.exam" />
   </ItemGroup>
 </Project>
