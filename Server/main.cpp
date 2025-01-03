@@ -128,6 +128,10 @@ void TestDB()
 int main()
 {
 	Utils::EnvInit(".env");
+
+	/*for (auto& m : Utils::GetEnv())
+		cout << m.first << " : " << m.second << '\n';
+	return 0;*/
 	
 	GDBConnectionPool = new DBConnectionPool;
 	TestDB();

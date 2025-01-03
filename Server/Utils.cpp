@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Utils.h"
 
-map<std::string, std::string> Utils::envVariables;
+map<std::string, std::string> Utils::_envVariables;
 
 void Utils::EnvInit(const string& fileName)
 {
@@ -28,7 +28,7 @@ void Utils::EnvInit(const string& fileName)
 		{
 			std::string key = line.substr(0, delimiterPos);
 			std::string value = line.substr(delimiterPos + 1);
-			envVariables[key] = value;
+			_envVariables[key] = value;
 		}
 	}
 
@@ -37,7 +37,7 @@ void Utils::EnvInit(const string& fileName)
 
 string Utils::getEnv(const string& key)
 {
-	auto it = envVariables.find(key);
-	if (it != envVariables.end()) return it->second;
+	auto it = _envVariables.find(key);
+	if (it != _envVariables.end()) return it->second;
 	return "";
 }
