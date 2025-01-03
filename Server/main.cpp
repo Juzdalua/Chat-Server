@@ -127,10 +127,11 @@ void TestDB()
 
 int main()
 {
-	Utils::Init();
-
+	Utils::Init(".env");
+	
 	GDBConnectionPool = new DBConnectionPool;
 	TestDB();
+	while (true) {}
 	return 0;
 
 	///StartHttpServer();

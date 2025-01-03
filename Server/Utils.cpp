@@ -3,9 +3,19 @@
 
 map<std::string, std::string> Utils::envVariables;
 
-void Utils::Init(const string& filePath)
+void Utils::Init(const string& fileName)
 {
-	std::ifstream envFile(filePath);
+	TCHAR szCurrentDir[MAX_PATH];
+	GetCurrentDirectory(MAX_PATH, szCurrentDir);
+
+	// TCHAR -> std::wstring 변환
+	std::wstring wideCurrentDir(szCurrentDir);
+	std::string currentDir(wideCurrentDir.begin(), wideCurrentDir.end());
+
+	// 실행 파일 디렉터리와 같은 위치에 있는 .env 파일 경로 생성
+	std::string fullFilePath = currentDir + "\\" + fileName;
+
+	std::ifstream envFile(fullFilePath);
 	ASSERT_CRASH(envFile.is_open());
 
 	std::string line;
