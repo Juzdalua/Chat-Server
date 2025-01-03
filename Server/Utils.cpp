@@ -3,7 +3,7 @@
 
 map<std::string, std::string> Utils::envVariables;
 
-void Utils::Init(const string& fileName)
+void Utils::EnvInit(const string& fileName)
 {
 	TCHAR szCurrentDir[MAX_PATH];
 	GetCurrentDirectory(MAX_PATH, szCurrentDir);

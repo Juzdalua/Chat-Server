@@ -127,7 +127,7 @@ void TestDB()
 
 int main()
 {
-	Utils::Init(".env");
+	Utils::EnvInit(".env");
 	
 	GDBConnectionPool = new DBConnectionPool;
 	TestDB();

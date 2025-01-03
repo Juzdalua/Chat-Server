@@ -9,7 +9,7 @@ public:
 	Utils() = delete;
 
 public:
-	static void Init(const std::string& fileName = ".env");
+	static void EnvInit(const std::string& fileName = ".env");
 	static std::string getEnv(const std::string& key);
 
 private:
