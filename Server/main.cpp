@@ -137,6 +137,13 @@ int main()
 	///StartHttpServer();
 
 	// TCP Server Set
+	const std::string serverIP = Utils::getEnv("SERVER_IP");
+	const std::string serverPORT = Utils::getEnv("SERVER_PORT");
+
+	std::wstring serverIPString = std::wstring().assign(serverIP.begin(), serverIP.end());
+	_IP = serverIPString;
+	_PORT = stoi(serverPORT);
+
 	int32 MAX_SESSION_COUNT = 1;
 	shared_ptr<IocpCore> iocpCore = make_shared<IocpCore>(
 		NetAddress(_IP, _PORT)
