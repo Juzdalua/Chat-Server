@@ -1,9 +1,12 @@
 #include "pch.h"
 #include "Utils.h"
+#include <iomanip>
+#include <ctime>
+#include <sstream>
 
-map<std::string, std::string> Utils::_envVariables;
+std::map<std::string, std::string> Utils::_envVariables;
 
-void Utils::EnvInit(const string& fileName)
+bool Utils::EnvInit(const std::string& fileName)
 {
 	TCHAR szCurrentDir[MAX_PATH];
 	GetCurrentDirectory(MAX_PATH, szCurrentDir);
@@ -16,7 +19,7 @@ void Utils::EnvInit(const string& fileName)
 	std::string fullFilePath = currentDir + "\\" + fileName;
 
 	std::ifstream envFile(fullFilePath);
-	ASSERT_CRASH(envFile.is_open());
+	if (!envFile.is_open()) return false;
 
 	std::string line;
 	while (std::getline(envFile, line))
@@ -33,11 +36,50 @@ void Utils::EnvInit(const string& fileName)
 	}
 
 	envFile.close();
+	return true;
 }
 
-string Utils::getEnv(const string& key)
+std::string Utils::getEnv(const std::string& key)
 {
 	auto it = _envVariables.find(key);
 	if (it != _envVariables.end()) return it->second;
 	return "";
+}
+
+void Utils::LogError(const std::string& errorMsg, const std::string& functionName, std::string fileName)
+{
+	TCHAR szCurrentDir[MAX_PATH];
+	GetCurrentDirectory(MAX_PATH, szCurrentDir);
+	std::wstring wideCurrentDir(szCurrentDir);
+	std::string currentDir(wideCurrentDir.begin(), wideCurrentDir.end());
+
+	auto t = std::time(nullptr);
+	std::tm tm = {};
+	localtime_s(&tm, &t);
+	std::ostringstream dateStream;
+	dateStream << std::put_time(&tm, "%Y_%m_%d");
+
+	std::string fullFilePath = currentDir + "\\log\\" + fileName + dateStream.str() + ".txt";
+	std::ofstream logFile(fullFilePath, std::ios::app);
+	if (!logFile.is_open()) return;
+
+	std::ostringstream timeStream;
+	timeStream << std::put_time(&tm, "%H:%M:%S");
+
+	logFile << std::endl;
+	logFile << "[" << timeStream.str() << "] -> [" << functionName << "]" << std::endl;
+	logFile << errorMsg << std::endl;
+	logFile.close();
+}
+
+void Utils::TestLogError()
+{
+	try
+	{
+		throw std::runtime_error("Test Error Log");
+	}
+	catch (const std::exception& e)
+	{
+		Utils::LogError(e.what(), "TestLogError");
+	}
 }

@@ -15,30 +15,21 @@ enum : UINT
 	///////////////////////////////////////////////////////////
 	// LiveModApp이 보내는 데이터 5000
 	///////////////////////////////////////////////////////////
-	PKT_C_SET_INFO = 5000, // ivi -> server
-	PKT_S_SET_INFO = 5001, // server -> ue
-
-	PKT_C_DRIVING_STATUS = 5002,
-	PKT_S_DRIVING_STATUS = 5003,
+	PKT_SET_INFO = 5001, // ivi -> server -> ue
 
 	///////////////////////////////////////////////////////////
 	// 시팅벅이 보내는 데이터 6000
 	///////////////////////////////////////////////////////////
-	PKT_C_SEATINGBUCK_BUTTON = 6001, // recv from mdaq
-	PKT_S_SEATINGBUCK_BUTTON = 6000, // broadcast mdaq data
-	PKT_S_SEATINGBUCK_HANDLE = 6002, // broadcast inno mfc program
+	PKT_SEATINGBUCK_BUTTON = 6001, // mdaq -> server -> ue : broadcast mdaq mfc program
+	PKT_SEATINGBUCK_HANDLE = 6002, // broadcast inno mfc program
 
 	///////////////////////////////////////////////////////////
 	// 언리얼이 보내는 데이터 7000
 	///////////////////////////////////////////////////////////
-	PKT_C_DRIVING_STATE = 7000, // ue -> server
-	PKT_S_DRIVING_STATE = 7001, // server -> ivi
+	PKT_DRIVING_STATE = 7001, // ue -> server -> ivi : velocity
 
-	PKT_C_AUTO_DRIVE = 7002,
-	PKT_S_AUTO_DRIVE = 7003,
-
-	PKT_C_DONE_AUTO_DRIVE = 7004,
-	PKT_S_DONE_AUTO_DRIVE = 7005,
+	PKT_AUTO_DRIVE = 7002,
+	PKT_DONE_AUTO_DRIVE = 7003,
 };
 
 class ClientPacketHandler

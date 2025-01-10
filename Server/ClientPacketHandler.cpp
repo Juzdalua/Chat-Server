@@ -3,56 +3,95 @@
 #include "SendBuffer.h"
 #include "SendQueue.h"
 #include "GameData.h"
+#include "Utils.h"
+//#include "DBConnectionPool.h"
 
 void ClientPacketHandler::HandlePacket(std::shared_ptr<PacketData> pkt)
 {
-	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt->buffer);
-	/*int id = ntohl(recvHheader->id);
-	int size = ntohl(recvHheader->size);*/
-
-	int id = recvHheader->id;
-	int size = recvHheader->size;
-	/*if (id > 10'000 || id < 0)
+	try
 	{
-		id = ntohl(recvHheader->id);
-		size = ntohl(recvHheader->size);
-	}*/
+		//////////////////////////////////////////////////////////////////
+		// 헤더 파싱
+		PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt->buffer);
+		/*int id = ntohl(recvHheader->id);
+		int size = ntohl(recvHheader->size);*/
 
-	switch (id)
-	{
-	case PKT_C_SET_INFO:
-		HandleSetInfo(pkt);
-		return;
+		int id = recvHheader->id;
+		int size = recvHheader->size;
+		//////////////////////////////////////////////////////////////////
 
-	case PKT_C_SEATINGBUCK_BUTTON:
-		HandleMDAQData(pkt);
-		return;
+		//////////////////////////////////////////////////////////////////
+		// 자율주행
+		switch (id)
+		{
+		case PKT_AUTO_DRIVE:
+			HandleAutoDrive(pkt);
+			return;
 
-	case PKT_C_DRIVING_STATE:
-		HandleDrivingState(pkt);
-		return;
+		case PKT_DONE_AUTO_DRIVE:
+			HandleDoneAutoDrive(pkt);
+			return;
+		}
+		//////////////////////////////////////////////////////////////////
 
-	case PKT_C_AUTO_DRIVE:
-		HandleAutoDrive(pkt);
-		return;
+		//////////////////////////////////////////////////////////////////
+		// 수신 후 브로드캐스트
+		PacketHeader header = { 0 };
+		header.id = id;
 
-	case PKT_C_DONE_AUTO_DRIVE:
-		HandleDoneAutoDrive(pkt);
+		std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
+		json jsonData;
+
+		try {
+			jsonData = json::parse(jsonString);
+		}
+		catch (const json::parse_error& e) {
+			Utils::LogError("JSON parsing error: " + std::string(e.what()) + " with string: " + jsonString, "HandlePacket");
+			jsonData.clear();
+			return;
+		}
+
+		json resultJson;
+		resultJson["result"] = jsonData;
+		jsonString = resultJson.dump();
+
+		Broadcast(header, jsonString);
+		jsonData.clear();
+		resultJson.clear();
+		jsonString.clear();
 		return;
+		//////////////////////////////////////////////////////////////////
+
+		//////////////////////////////////////////////////////////////////
+		// Deprecated
+		switch (id)
+		{
+		case PKT_SET_INFO:
+			HandleSetInfo(pkt);
+			return;
+
+		case PKT_SEATINGBUCK_BUTTON:
+			HandleMDAQData(pkt);
+			return;
+
+		case PKT_DRIVING_STATE:
+			HandleDrivingState(pkt);
+			return;
+
+		case PKT_AUTO_DRIVE:
+			HandleAutoDrive(pkt);
+			return;
+
+		case PKT_DONE_AUTO_DRIVE:
+			HandleDoneAutoDrive(pkt);
+			return;
+		}
+		//////////////////////////////////////////////////////////////////
 	}
-
-	PacketHeader header = { 0 };
-	header.id = id;
-
-	std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
-	json jsonData = json::parse(jsonString);
-	json resultJson;
-	resultJson["result"] = jsonData;
-	jsonString = resultJson.dump();
-	Broadcast(header, jsonString);
-	jsonData.clear();
-	resultJson.clear();
-	jsonString.clear();
+	catch (const std::exception& e)
+	{
+		Utils::LogError(e.what(), "HandlePacket");
+	}
 }
 
 void ClientPacketHandler::HandleSetInfo(std::shared_ptr<PacketData> pkt)
@@ -62,7 +101,7 @@ void ClientPacketHandler::HandleSetInfo(std::shared_ptr<PacketData> pkt)
 	int size = recvHheader->size;
 
 	PacketHeader header = { 0 };
-	header.id = PKT_S_SET_INFO;
+	header.id = PKT_SET_INFO;
 
 	std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
 	json jsonData = json::parse(jsonString);
@@ -103,12 +142,14 @@ void ClientPacketHandler::HandleSetInfo(std::shared_ptr<PacketData> pkt)
 
 void ClientPacketHandler::HandleMDAQData(std::shared_ptr<PacketData> pkt)
 {
+	//if (!theDlg.IsRun()) return;
+
 	PacketHeader* recvHheader = reinterpret_cast<PacketHeader*>(pkt->buffer);
 	int id = recvHheader->id;
 	int size = recvHheader->size;
 
 	PacketHeader header = { 0 };
-	header.id = PKT_S_SEATINGBUCK_BUTTON;
+	header.id = PKT_SEATINGBUCK_BUTTON;
 
 	std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
 	json jsonData = json::parse(jsonString);
@@ -129,7 +170,7 @@ void ClientPacketHandler::HandleDrivingState(std::shared_ptr<PacketData> pkt)
 	int size = recvHheader->size;
 
 	PacketHeader header = { 0 };
-	header.id = PKT_S_DRIVING_STATE;
+	header.id = PKT_DRIVING_STATE;
 
 	std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
 	json jsonData = json::parse(jsonString);

@@ -2,18 +2,29 @@
 #include <cstdlib>
 #include <fstream>
 #include <string>
+#include <map>
 
 class Utils
 {
 public:
+	/////////////////////////////////////////
+	// Constructor
+	/////////////////////////////////////////
 	Utils() = delete;
 
 public:
-	static void EnvInit(const std::string& fileName = ".env");
+	/////////////////////////////////////////
+	// .env
+	/////////////////////////////////////////
+	static bool EnvInit(const std::string& fileName = ".env");
 	static std::string getEnv(const std::string& key);
 
-	static map<string, string> GetEnv() { return _envVariables; }
+	/////////////////////////////////////////
+	// Error Log Save
+	/////////////////////////////////////////
+	static void LogError(const std::string& errorMsg, const std::string& functionName, std::string fileName = "error_log_");
+	static void TestLogError();
 
 private:
-	static map<std::string, std::string> _envVariables;
+	static std::map<std::string, std::string> _envVariables;
 };
