@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <ctime>
 #include <sstream>
+#include <chrono>
 
 std::map<std::string, std::string> Utils::_envVariables;
 
@@ -82,4 +83,19 @@ void Utils::TestLogError()
 	{
 		Utils::LogError(e.what(), "TestLogError");
 	}
+}
+
+std::string Utils::GetNowTimeUtc9()
+{
+	auto now = std::chrono::system_clock::now();
+	auto nowTimeT = std::chrono::system_clock::to_time_t(now);
+	auto duration = now.time_since_epoch();
+	auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() % 1000;
+	std::tm localTime;
+	localtime_s(&localTime, &nowTimeT);
+	std::ostringstream utc9TimeStream;
+	utc9TimeStream << std::put_time(&localTime, "%Y-%m-%d %H:%M:%S") << "." << std::setfill('0') << std::setw(3) << millis;
+	auto utc9Time = utc9TimeStream.str();
+
+	return utc9Time;
 }
