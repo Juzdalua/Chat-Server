@@ -85,6 +85,15 @@ void Utils::TestLogError()
 	}
 }
 
+long long Utils::GetNowTimeMs()
+{
+	auto now = std::chrono::system_clock::now();
+	auto nowTimeT = std::chrono::system_clock::to_time_t(now);
+	return std::chrono::duration_cast<std::chrono::milliseconds>(
+		now.time_since_epoch()
+	).count();
+}
+
 std::string Utils::GetNowTimeUtc9()
 {
 	auto now = std::chrono::system_clock::now();

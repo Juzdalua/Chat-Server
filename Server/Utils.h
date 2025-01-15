@@ -29,6 +29,8 @@ public:
 	/////////////////////////////////////////
 	// Time
 	/////////////////////////////////////////
+	
+	static long long  GetNowTimeMs(); // 1673529600123
 	static std::string GetNowTimeUtc9(); // %Y-%m-%d %H:%M:%S
 
 private:
