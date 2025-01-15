@@ -73,11 +73,11 @@ void Utils::LogError(const std::string& errorMsg, const std::string& functionNam
 	logFile.close();
 }
 
-void Utils::TestLogError()
+void Utils::TestLogError(const std::string& msg)
 {
 	try
 	{
-		throw std::runtime_error("Test Error Log");
+		throw std::runtime_error(msg);
 	}
 	catch (const std::exception& e)
 	{
