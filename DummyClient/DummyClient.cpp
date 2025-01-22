@@ -268,23 +268,53 @@ void RawRecv(SOCKET& clientSocket)
 
 void RawRecvOnlyId(SOCKET& clientSocket)
 {
+	char recvBuffer[4096]; // 수신 버퍼
+	int processLen = 0;    // 처리된 데이터 길이
+
 	while (true)
 	{
-		// RECV
-		char recvBuffer[4096];
-		int recvLen = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+		// 데이터 수신
+		int recvLen = recv(clientSocket, recvBuffer + processLen, sizeof(recvBuffer) - processLen, 0);
 		if (recvLen <= 0)
 		{
-			int errCode = WSAGetLastError();
-			cout << "Recv ErrorCode: " << errCode << '\n';
+			int error = WSAGetLastError();
+			std::cout << "Receive Error: " << error << '\n';
 			return;
 		}
 
-		int headerSize = sizeof(PacketHeader);
-		if (recvLen >= headerSize)
+		processLen += recvLen;
+		int dataSize = processLen;
+
+		while (dataSize > 0)
 		{
+			// 최소 헤더 크기 확인
+			if (dataSize < sizeof(PacketHeader))
+				break;
+
+			// 헤더 파싱
 			PacketHeader* header = reinterpret_cast<PacketHeader*>(recvBuffer);
+
+			// 패킷 크기 확인
+			if (dataSize < header->size)
+				break;
+
+			// 데이터 처리
 			cout << "ID -> " << header->id << ", SIZE -> " << header->size << ", LEN => " << recvLen << '\n';
+
+			if (header->size > sizeof(PacketHeader))
+			{
+				const char* payload = recvBuffer + sizeof(PacketHeader);
+				int payloadSize = header->size - sizeof(PacketHeader);
+
+				std::string jsonString(payload, payloadSize);
+				//std::cout << "JSON Data: " << jsonString << '\n';
+			}
+
+			// 처리된 데이터 만큼 버퍼 이동
+			int packetSize = header->size;
+			memmove(recvBuffer, recvBuffer + packetSize, processLen - packetSize);
+			processLen -= packetSize;
+			dataSize = processLen;
 		}
 	}
 }
