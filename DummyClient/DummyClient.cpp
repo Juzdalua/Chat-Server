@@ -13,12 +13,13 @@
 using namespace std;
 using json = nlohmann::json;
 
+#pragma pack(push,1)
 struct PacketHeader
 {
 	UINT size; // 패킷 size
 	UINT id; // 프로토콜 ID (ex 1=로그인, 2=이동요청)
 };
-
+#pragma pack(pop)
 
 void EchoClient(SOCKET& clientSocket)
 {
@@ -52,53 +53,6 @@ void EchoClient(SOCKET& clientSocket)
 
 		cout << "Recv Data! Len = " << recvLen << '\n';
 		cout << "Recv Data! Data = " << recvBuffer << '\n';
-	}
-}
-
-void RecvClient(SOCKET& clientSocket)
-{
-	while (true)
-	{
-		unsigned char buffer[4096]; // 데이터 버퍼를 unsigned char*로 변경
-		int totalReceived = 0;
-
-		// 1. 헤더 수신
-		int headerSize = sizeof(PacketHeader);
-		while (totalReceived < headerSize) {
-			int received = recv(clientSocket, reinterpret_cast<char*>(buffer) + totalReceived, headerSize - totalReceived, 0);
-			if (received <= 0) {
-				cerr << "Header Recv Error or Connection Closed!" << '\n';
-				return;
-			}
-			totalReceived += received;
-		}
-
-		// 2. 헤더 파싱
-		PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
-		int totalPacketSize = header->size;  // 헤더에 정의된 전체 패킷 크기
-		cout << "Recv Packet Size: " << totalPacketSize << '\n';
-
-		// 3. 본문 수신
-		totalReceived = 0;
-		while (totalReceived < totalPacketSize - headerSize) {
-			int received = recv(clientSocket, reinterpret_cast<char*>(buffer) + headerSize + totalReceived,
-				totalPacketSize - headerSize - totalReceived, 0);
-			if (received <= 0) {
-				cerr << "Data Recv Error or Connection Closed!" << '\n';
-				return;
-			}
-			totalReceived += received;
-		}
-
-		// 4. JSON 데이터 처리
-		string jsonData(reinterpret_cast<char*>(buffer) + headerSize, totalPacketSize - headerSize); // 헤더 이후 데이터 추출
-		try {
-			json parsedData = json::parse(jsonData);
-			cout << "Data: " << parsedData.dump(4) << '\n';
-		}
-		catch (exception& e) {
-			cerr << "JSON Parsing Error: " << e.what() << '\n';
-		}
 	}
 }
 
@@ -257,6 +211,25 @@ void RawRecv(SOCKET& clientSocket)
 	}
 }
 
+void RawRecvOnlyId(SOCKET& clientSocket)
+{
+	while (true)
+	{
+		// RECV
+		char recvBuffer[4096];
+		int recvLen = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+		if (recvLen <= 0)
+		{
+			int errCode = WSAGetLastError();
+			cout << "Recv ErrorCode: " << errCode << '\n';
+			return;
+		}
+
+		PacketHeader* header = reinterpret_cast<PacketHeader*>(recvBuffer);
+		cout << "ID -> " << header->id << ", LEN => " << recvLen << ", SIZE -> " << header->size << '\n';
+	}
+}
+
 int main()
 {
 	this_thread::sleep_for(1s);
@@ -312,12 +285,9 @@ int main()
 	cout << "Connected To Server!" << '\n';
 
 	// 4. 데이터 송수신
-	//EchoClient(clientSocket);
-	//RecvClient(clientSocket);
-	//RawRecv(clientSocket);
-
 	vector<thread> clientWorkers;
 	clientWorkers.emplace_back(RawRecv, ref(clientSocket));
+	//clientWorkers.emplace_back(RawRecvOnlyId, ref(clientSocket));
 	//clientWorkers.emplace_back(RawSendSet5000, ref(clientSocket));
 	//clientWorkers.emplace_back(RawSendVelocity7000, ref(clientSocket));
 	//clientWorkers.emplace_back(RawSendTest, ref(clientSocket));
