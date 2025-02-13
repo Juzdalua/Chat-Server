@@ -150,7 +150,7 @@ int main()
 	{
 		ClientPacketHandler::_serverType = ServerType::UDP;
 
-		shared_ptr<UDPServer> udpServer = make_shared<UDPServer>(_PORT);
+		shared_ptr<UDPServer> udpServer = make_shared<UDPServer>(serverIP, _PORT);
 		udpServer->Init();
 		udpServer->Bind();
 		ClientPacketHandler::_udpServer = udpServer;

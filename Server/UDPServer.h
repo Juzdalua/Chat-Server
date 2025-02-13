@@ -16,7 +16,7 @@ struct sockaddr_in_compare {
 class UDPServer
 {
 public:
-    UDPServer(u_short port);
+    UDPServer(string ip, u_short port);
     ~UDPServer();
 
     void Init();
@@ -32,6 +32,7 @@ private:
     sockaddr_in serverAddr, clientAddr;
     char buffer[0x10000];
     int clientAddrSize;
+    string _ip;
     u_short _port;
     std::set<sockaddr_in, sockaddr_in_compare> clientAddresses;
 };

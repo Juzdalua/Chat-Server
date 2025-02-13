@@ -7,7 +7,8 @@ bool CompareSockaddrIn(const sockaddr_in& a, const sockaddr_in& b)
 	return a.sin_addr.s_addr == b.sin_addr.s_addr && a.sin_port == b.sin_port;
 }
 
-UDPServer::UDPServer(u_short port) : _port(port), clientAddrSize(sizeof(clientAddr))
+UDPServer::UDPServer(string ip, u_short port)
+	:_ip(ip), _port(port), clientAddrSize(sizeof(clientAddr))
 {
 	serverSocket = INVALID_SOCKET;
 }
@@ -40,15 +41,22 @@ void UDPServer::Init()
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(_port);
 	serverAddr.sin_addr.s_addr = INADDR_ANY;
+	inet_pton(AF_INET, _ip.c_str(), &serverAddr.sin_addr);
 }
 
 void UDPServer::Bind()
 {
 	// ¹ÙÀÎµù
-	if (::bind(serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+	/*if (::bind(serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
 		std::cout << "Binding failed" << '\n';
 		exit(1);
+	}*/
+
+	if (bind(serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+		std::cout << "Bind failed, ErrorCode: " << WSAGetLastError() << '\n';
+		return;
 	}
+
 	std::cout << "Server is listening on port " << _port << std::endl;
 }
 
