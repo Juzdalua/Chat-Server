@@ -14,7 +14,8 @@
 	TCP 메인로직처리 스레드 1개
 */
 
-wstring _IP = L"192.168.10.123";
+//wstring _IP = L"192.168.10.123";
+wstring _IP = L"127.0.0.1";
 int _PORT = 1998;
 
 void IocpWorker(shared_ptr<IocpCore> iocpCore);
@@ -22,26 +23,6 @@ void PacketWorker();
 void SeatingbuckSendData(shared_ptr<IocpCore> iocpCore);
 void SeatingbuckSendData1();
 void SeatingbuckSendData2();
-
-void StartHttpServer()
-{
-	try {
-		net::io_context ioc;
-		tcp::acceptor acceptor(ioc, tcp::endpoint(tcp::v4(), 8080));
-
-		cout << "Server started on port 8080" << endl;
-
-		while (true) {
-			tcp::socket socket(ioc);
-			acceptor.accept(socket);
-
-			handle_request(socket);
-		}
-	}
-	catch (exception& e) {
-		cerr << "Error: " << e.what() << endl;
-	}
-}
 
 void TestDB()
 {
@@ -131,11 +112,11 @@ int main()
 	
 	GDBConnectionPool = new DBConnectionPool;
 	
-	///StartHttpServer();
-
 	// TCP Server Set
 	const std::string serverIP = Utils::getEnv("SERVER_IP");
 	const std::string serverPORT = Utils::getEnv("SERVER_PORT");
+
+	cout << serverIP << " " << serverPORT << '\n';
 
 	std::wstring serverIPString = std::wstring().assign(serverIP.begin(), serverIP.end());
 	_IP = serverIPString;
@@ -146,6 +127,7 @@ int main()
 		NetAddress(_IP, _PORT)
 	);
 	iocpCore->StartServer();
+	cout << "Server Start" << '\n';
 
 	// Client Set
 	iocpCore->StartAccept();

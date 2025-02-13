@@ -56,6 +56,42 @@ void EchoClient(SOCKET& clientSocket)
 	}
 }
 
+void RawSend(SOCKET& clientSocket)
+{
+	while (true)
+	{
+		string s;
+		cin >> s;
+
+		json jsonData = {
+			{"data", s},
+		};
+
+		std::string jsonString = jsonData.dump(); // JSON -> String
+		UINT jsonSize = static_cast<UINT>(jsonString.size());
+		int totalPacketSize = jsonSize + sizeof(PacketHeader);
+
+		//UINT id = 5000U;
+		UINT id = 123U;
+		PacketHeader sendHeader = { 0 };
+		sendHeader.id = id;
+		sendHeader.size = sizeof(PacketHeader) + jsonString.size();
+		cout << "[SEND] ID -> " << sendHeader.id << ", SIZE -> " << sendHeader.size << '\n';
+
+		char sendBuffer[4096] = "";
+		memcpy(sendBuffer, &sendHeader, sizeof(PacketHeader));
+		memcpy(sendBuffer + sizeof(PacketHeader), jsonString.data(), jsonSize);
+
+		int resultCode = send(clientSocket, sendBuffer, totalPacketSize, 0);
+		if (resultCode == SOCKET_ERROR)
+		{
+			int errCode = WSAGetLastError();
+			cout << "Send ErrorCode: " << errCode << '\n';
+			return;
+		}
+	}
+}
+
 void RawSendVelocity7000(SOCKET& clientSocket)
 {
 	while (true)
@@ -245,7 +281,7 @@ void RawRecv(SOCKET& clientSocket)
 				break;
 
 			// 데이터 처리
-			cout << '\n' << "ID -> " << header->id << ", SIZE -> " << header->size << ", LEN => " << recvLen << '\n';
+			cout << '\n' << "[RECV] ID -> " << header->id << ", SIZE -> " << header->size << ", LEN => " << recvLen << '\n';
 
 			if (header->size > sizeof(PacketHeader))
 			{
@@ -342,8 +378,8 @@ int main()
 	}
 
 	// 2. IP, PORT 설정
-	//char IP[] = "127.0.0.1";
-	char IP[] = "192.168.10.123";
+	char IP[] = "127.0.0.1";
+	//char IP[] = "192.168.10.134";
 	//char IP[] = "192.168.10.129";
 	u_short PORT = 1998;
 
@@ -354,6 +390,8 @@ int main()
 
 	// serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); <- deprecated
 	inet_pton(AF_INET, IP, &serverAddr.sin_addr);
+
+	cout << IP << " " << PORT << '\n';
 
 	serverAddr.sin_port = htons(PORT);
 	/*
@@ -376,6 +414,7 @@ int main()
 	// 4. 데이터 송수신
 	vector<thread> clientWorkers;
 	clientWorkers.emplace_back(RawRecv, ref(clientSocket));
+	clientWorkers.emplace_back(RawSend, ref(clientSocket));
 	//clientWorkers.emplace_back(RawRecvOnlyId, ref(clientSocket));
 	//clientWorkers.emplace_back(RawSendSet5000, ref(clientSocket));
 	//clientWorkers.emplace_back(RawSendVelocity7000, ref(clientSocket));

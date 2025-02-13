@@ -18,74 +18,84 @@ void ClientPacketHandler::HandlePacket(std::shared_ptr<PacketData> pkt)
 
 		int id = recvHheader->id;
 		int size = recvHheader->size;
+
+		std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
+		cout << "[RECV] Id -> " << id << ", Size -> " << size << ", Data -> " << jsonString << '\n';
+
+		PacketHeader header = { 0 };
+		header.id = id;
+		header.size = size;
+		Broadcast(header, jsonString);
+		return;
+
 		//////////////////////////////////////////////////////////////////
 
 		//////////////////////////////////////////////////////////////////
 		// 자율주행
-		switch (id)
-		{
-		case PKT_AUTO_DRIVE:
-			HandleAutoDrive(pkt);
-			return;
+		//switch (id)
+		//{
+		//case PKT_AUTO_DRIVE:
+		//	HandleAutoDrive(pkt);
+		//	return;
 
-		case PKT_DONE_AUTO_DRIVE:
-			HandleDoneAutoDrive(pkt);
-			return;
-		}
-		//////////////////////////////////////////////////////////////////
+		//case PKT_DONE_AUTO_DRIVE:
+		//	HandleDoneAutoDrive(pkt);
+		//	return;
+		//}
+		////////////////////////////////////////////////////////////////////
 
-		//////////////////////////////////////////////////////////////////
-		// 수신 후 브로드캐스트
-		PacketHeader header = { 0 };
-		header.id = id;
+		////////////////////////////////////////////////////////////////////
+		//// 수신 후 브로드캐스트
+		//PacketHeader header = { 0 };
+		//header.id = id;
 
-		std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
-		json jsonData;
+		//std::string jsonString(reinterpret_cast<char*>(pkt->buffer + sizeof(PacketHeader)), size - sizeof(PacketHeader));
+		//json jsonData;
 
-		try {
-			jsonData = json::parse(jsonString);
-		}
-		catch (const json::parse_error& e) {
-			Utils::LogError("JSON parsing error: " + std::string(e.what()) + " with string: " + jsonString, "HandlePacket");
-			jsonData.clear();
-			return;
-		}
+		//try {
+		//	jsonData = json::parse(jsonString);
+		//}
+		//catch (const json::parse_error& e) {
+		//	Utils::LogError("JSON parsing error: " + std::string(e.what()) + " with string: " + jsonString, "HandlePacket");
+		//	jsonData.clear();
+		//	return;
+		//}
 
-		json resultJson;
-		resultJson["result"] = jsonData;
-		jsonString = resultJson.dump();
+		//json resultJson;
+		//resultJson["result"] = jsonData;
+		//jsonString = resultJson.dump();
 
-		Broadcast(header, jsonString);
-		jsonData.clear();
-		resultJson.clear();
-		jsonString.clear();
-		return;
-		//////////////////////////////////////////////////////////////////
+		//Broadcast(header, jsonString);
+		//jsonData.clear();
+		//resultJson.clear();
+		//jsonString.clear();
+		//return;
+		////////////////////////////////////////////////////////////////////
 
-		//////////////////////////////////////////////////////////////////
-		// Deprecated
-		switch (id)
-		{
-		case PKT_SET_INFO:
-			HandleSetInfo(pkt);
-			return;
+		////////////////////////////////////////////////////////////////////
+		//// Deprecated
+		//switch (id)
+		//{
+		//case PKT_SET_INFO:
+		//	HandleSetInfo(pkt);
+		//	return;
 
-		case PKT_SEATINGBUCK_BUTTON:
-			HandleMDAQData(pkt);
-			return;
+		//case PKT_SEATINGBUCK_BUTTON:
+		//	HandleMDAQData(pkt);
+		//	return;
 
-		case PKT_DRIVING_STATE:
-			HandleDrivingState(pkt);
-			return;
+		//case PKT_DRIVING_STATE:
+		//	HandleDrivingState(pkt);
+		//	return;
 
-		case PKT_AUTO_DRIVE:
-			HandleAutoDrive(pkt);
-			return;
+		//case PKT_AUTO_DRIVE:
+		//	HandleAutoDrive(pkt);
+		//	return;
 
-		case PKT_DONE_AUTO_DRIVE:
-			HandleDoneAutoDrive(pkt);
-			return;
-		}
+		//case PKT_DONE_AUTO_DRIVE:
+		//	HandleDoneAutoDrive(pkt);
+		//	return;
+		//}
 		//////////////////////////////////////////////////////////////////
 	}
 	catch (const std::exception& e)
@@ -218,6 +228,9 @@ void ClientPacketHandler::Broadcast(PacketHeader& header, std::string& jsonStrin
 
 	sendBuffer->CopyData(buffer.data(), totalPacketSize);
 	sendQueue->Push({ sendBuffer, nullptr });
+
+	cout << "[SEND] Id -> " << header.id << ", Size -> " << header.size << ", Data -> " << jsonString << '\n';
+
 	/*CString testMsg;
 	testMsg.Format(_T("id: %d, size: %d / id: %d, size: %d"), id, size, reinterpret_cast<PacketHeader*>(sendBuffer->Buffer())->id, reinterpret_cast<PacketHeader*>(sendBuffer->Buffer())->size);
 	Utils::AlertOK(testMsg, MB_ICONINFORMATION);*/
