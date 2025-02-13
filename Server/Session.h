@@ -8,6 +8,18 @@
 #include <queue>
 #include <mutex>
 
+#ifndef SERVER_TYPE_H
+#define SERVER_TYPE_H
+
+enum class ServerType
+{
+	TCP,
+	UDP
+};
+
+#endif // SERVER_TYPE_H
+
+
 struct PacketHeader
 {
 	UINT size;
@@ -32,7 +44,7 @@ class Session : public std::enable_shared_from_this<Session>
 	};
 
 public:
-	Session();
+	Session(ServerType serverType);
 	~Session();
 
 public:
@@ -48,26 +60,35 @@ public:
 
 public:
 	bool Disconnect(const WCHAR* cause);
-	void Send(std::shared_ptr<SendBuffer> sendBuffer);
+	void SendTCP(std::shared_ptr<SendBuffer> sendBuffer);
+	void SendUDP(std::shared_ptr<SendBuffer> sendBuffer);
 
 private:
 	HANDLE GetHandle() { return reinterpret_cast<HANDLE>(_clientSocket); }
 
-	void ProcessConnect();
+	void ProcessConnectTCP();
+	void ProcessConnectUDP();
 	void ProcessDisconnect();
 
-	void RegisterRecv();
-	void ProcessRecv(int numOfBytes);
+	void RegisterRecvTCP();
+	void ProcessRecvTCP(int numOfBytes);
 
-	void RegisterSend();
-	void ProcessSend(int numOfBytes, std::vector<std::shared_ptr<SendBuffer>> sendVec);
+	void RegisterRecvUDP();
+	void ProcessRecvUDP(int numOfBytes);
+
+	void RegisterSendTCP();
+	void ProcessSendTCP(int numOfBytes, std::vector<std::shared_ptr<SendBuffer>> sendVec);
+
+	void RegisterSendUDP();
+	void ProcessSendUDP(int numOfBytes, std::vector<std::shared_ptr<SendBuffer>> sendVec);
 
 	void HandleError(int errorCode);
 
 private:
 	void OnConnected();
 	void OnDisconnected();
-	int OnRecv(unsigned char* buffer, int len);
+	int OnRecvTCP(unsigned char* buffer, int len);
+	int OnRecvUDP(unsigned char* buffer, int len);
 	int OnSend(int len, std::vector<std::shared_ptr<SendBuffer>> sendVec);
 
 private:

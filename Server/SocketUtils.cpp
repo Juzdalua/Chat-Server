@@ -8,13 +8,15 @@ LPFN_CONNECTEX		SocketUtils::ConnectEx = nullptr;
 LPFN_DISCONNECTEX	SocketUtils::DisconnectEx = nullptr;
 LPFN_ACCEPTEX		SocketUtils::AcceptEx = nullptr;
 
-void SocketUtils::Init()
+void SocketUtils::Init(ServerType serverType)
 {
 	WSADATA wsaData;
 	ASSERT_CRASH(WSAStartup(MAKEWORD(2, 2), OUT & wsaData) == 0);
 
+	if (serverType == ServerType::UDP) return;
+
 	/* 런타임에 주소 얻어오는 API */
-	SOCKET dummySocket = CreateSocket();
+	SOCKET dummySocket = CreateSocketTCP();
 	ASSERT_CRASH(BindWindowsFunction(dummySocket, WSAID_CONNECTEX, reinterpret_cast<LPVOID*>(&ConnectEx)));
 	ASSERT_CRASH(BindWindowsFunction(dummySocket, WSAID_DISCONNECTEX, reinterpret_cast<LPVOID*>(&DisconnectEx)));
 	ASSERT_CRASH(BindWindowsFunction(dummySocket, WSAID_ACCEPTEX, reinterpret_cast<LPVOID*>(&AcceptEx)));
@@ -32,9 +34,14 @@ bool SocketUtils::BindWindowsFunction(SOCKET socket, GUID guid, LPVOID* fn)
 	return SOCKET_ERROR != WSAIoctl(socket, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(guid), fn, sizeof(*fn), OUT & bytes, NULL, NULL);
 }
 
-SOCKET SocketUtils::CreateSocket()
+SOCKET SocketUtils::CreateSocketTCP()
 {
 	return WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
+}
+
+SOCKET SocketUtils::CreateSocketUDP()
+{
+	return WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, 0, WSA_FLAG_OVERLAPPED);
 }
 
 bool SocketUtils::SetLinger(SOCKET socket, uint16 onoff, uint16 linger)
@@ -73,6 +80,7 @@ bool SocketUtils::SetUpdateAcceptSocket(SOCKET socket, SOCKET listenSocket)
 
 bool SocketUtils::Bind(SOCKET socket, NetAddress netAddr)
 {
+	cout << "Bind -> " << netAddr.GetSockAddr().sin_port << '\n';
 	return SOCKET_ERROR != bind(socket, reinterpret_cast<const SOCKADDR*>(&netAddr.GetSockAddr()), sizeof(SOCKADDR_IN));
 }
 

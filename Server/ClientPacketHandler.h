@@ -3,6 +3,7 @@
 #include <string>
 #include "PacketQueue.h"
 #include "Session.h"
+#include "UDPServer.h"
 
 //     __ _____ _____ _____
 //  __|  |   __|     |   | |  
@@ -52,4 +53,8 @@ public:
 
 	// 전송 전용
 	static void Broadcast(PacketHeader& header, std::string& jsonString);
+
+public:
+	static ServerType _serverType;
+	static shared_ptr<UDPServer> _udpServer;
 };

@@ -8,6 +8,7 @@
 #include "ClientPacketHandler.h"
 #include "GameData.h"
 #include "Utils.h"
+#include "UDPServer.h"
 
 /*
 	클라이언트 IO 수신 및 송신 스레드 1개
@@ -18,6 +19,7 @@
 wstring _IP = L"127.0.0.1";
 int _PORT = 1998;
 
+void UdpServerWorker(shared_ptr<UDPServer> udpServer);
 void IocpWorker(shared_ptr<IocpCore> iocpCore);
 void PacketWorker();
 void SeatingbuckSendData(shared_ptr<IocpCore> iocpCore);
@@ -35,7 +37,7 @@ void TestDB()
 	const string dbUsername = Utils::getEnv("DB_USERNAME");
 	const string dbPwd = Utils::getEnv("DB_PASSWORD");
 
-	wstring driverString = wstring(L"Driver={") + std::wstring().assign(dbDriver.begin(), dbDriver.end())+wstring(L"}");
+	wstring driverString = wstring(L"Driver={") + std::wstring().assign(dbDriver.begin(), dbDriver.end()) + wstring(L"}");
 	wstring serverString = wstring(L"Server=") + std::wstring().assign(dbServer.begin(), dbServer.end());
 	wstring databaseString = wstring(L"Database=") + std::wstring().assign(dbDatabase.begin(), dbDatabase.end());
 	wstring usernameString = wstring(L"UID=") + std::wstring().assign(dbUsername.begin(), dbUsername.end());
@@ -109,9 +111,9 @@ void TestDB()
 int main()
 {
 	Utils::EnvInit(".env");
-	
+
 	GDBConnectionPool = new DBConnectionPool;
-	
+
 	// TCP Server Set
 	const std::string serverIP = Utils::getEnv("SERVER_IP");
 	const std::string serverPORT = Utils::getEnv("SERVER_PORT");
@@ -124,23 +126,40 @@ int main()
 
 	int32 MAX_SESSION_COUNT = 1;
 	shared_ptr<IocpCore> iocpCore = make_shared<IocpCore>(
+		//ServerType::TCP,
+		ServerType::UDP,
 		NetAddress(_IP, _PORT)
 	);
-	iocpCore->StartServer();
-	cout << "Server Start" << '\n';
 
-	// Client Set
-	iocpCore->StartAccept();
 
-	sendQueue->SetIocpCore(iocpCore);
-	gameData = new GameData;
-
-	// Thread
 	vector<thread> workers;
+	sendQueue->SetIocpCore(iocpCore);
+
+	if (iocpCore->GetServerType() == ServerType::TCP)
+	{
+		iocpCore->StartServerTCP();
+		cout << "TCP Server Start" << '\n';
+
+		// Client Set
+		iocpCore->StartAcceptTCP();
+
+		gameData = new GameData;
+	}
+
+	else if (iocpCore->GetServerType() == ServerType::UDP)
+	{
+		ClientPacketHandler::_serverType = ServerType::UDP;
+
+		shared_ptr<UDPServer> udpServer = make_shared<UDPServer>(_PORT);
+		udpServer->Init();
+		udpServer->Bind();
+		ClientPacketHandler::_udpServer = udpServer;
+
+		workers.emplace_back(UdpServerWorker, udpServer);
+	}
+
 	workers.emplace_back(IocpWorker, iocpCore);
 	workers.emplace_back(PacketWorker);
-	//workers.emplace_back(SeatingbuckSendData, iocpCore);
-	//workers.emplace_back(StartHttpServer);
 
 	// Exit
 	for (auto& worker : workers)
@@ -155,11 +174,20 @@ int main()
 	return 0;
 }
 
+void UdpServerWorker(shared_ptr<UDPServer> udpServer)
+{
+	while(true)
+	{
+		udpServer->Recv();
+	}
+}
+
 void IocpWorker(shared_ptr<IocpCore> iocpCore)
 {
 	while (true)
 	{
-		iocpCore->GQCS(10);
+		if(iocpCore->GetServerType() == ServerType::TCP) iocpCore->GQCS(10);
+
 		if (sendQueue->Size() > 0) sendQueue->PopSend();
 	}
 }

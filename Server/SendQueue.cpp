@@ -21,7 +21,7 @@ void SendQueue::PopSend()
 		_queue.pop();
 	}
 
-	if (sendData.session != nullptr) sendData.session->Send(sendData.sendBuffer);
+	if (sendData.session != nullptr) sendData.session->SendTCP(sendData.sendBuffer);
 	else Broadcast(sendData.sendBuffer);
 
 	sendData.sendBuffer = nullptr;
@@ -35,5 +35,6 @@ void SendQueue::Broadcast(std::shared_ptr<SendBuffer> sendBuffer)
 		//Utils::AlertOK(_T("Broadcast Set Error."), MB_ICONERROR);
 		return;
 	}
-	_iocpCore->Broadcast(sendBuffer);
+
+	if(_iocpCore->GetServerType() == ServerType::TCP) _iocpCore->Broadcast(sendBuffer);
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "NetAddress.h"
+#include "IocpCore.h"
 
 class SocketUtils
 {
@@ -9,11 +10,12 @@ public:
 	static LPFN_ACCEPTEX		AcceptEx;
 
 public:
-	static void Init();
+	static void Init(ServerType serverType);
 	static void Clear();
 
 	static bool BindWindowsFunction(SOCKET socket, GUID guid, LPVOID* fn);
-	static SOCKET CreateSocket();
+	static SOCKET CreateSocketTCP();
+	static SOCKET CreateSocketUDP();
 
 	static bool SetLinger(SOCKET socket, uint16 onoff, uint16 linger);
 	static bool SetReuseAddress(SOCKET socket, bool flag);

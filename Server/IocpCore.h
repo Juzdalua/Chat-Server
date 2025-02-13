@@ -1,14 +1,27 @@
 #pragma once
 #include "Session.h"
 
+#ifndef SERVER_TYPE_H
+#define SERVER_TYPE_H
+
+enum class ServerType
+{
+	TCP,
+	UDP
+};
+
+#endif // SERVER_TYPE_H
+
+
 class IocpCore
 {
 public:
-	IocpCore(NetAddress address, int sessionCount = 1);
+	IocpCore(ServerType serverType, NetAddress address, int sessionCount = 1);
 	~IocpCore();
 
 	void Clear();
 
+	ServerType GetServerType() { return _serverType; }
 	NetAddress GetNetAddress() { return _netAddress; }
 
 	int GetMaxSessionCount() { return _sessionCount; }
@@ -19,12 +32,16 @@ public:
 	void HandleError(std::string errorMsg);
 
 	void SetSocketOption();
-	bool StartServer();
+	bool StartServerTCP();
+	bool StartServerUDP();
 
 	std::shared_ptr<Session> CreateSession();
-	void StartAccept();
-	void RegisterAccept(AcceptEvent* acceptEvent);
-	void ProcessAccept(AcceptEvent* acceptEvent);
+	void StartAcceptTCP();
+	void RegisterAcceptTCP(AcceptEvent* acceptEvent);
+	void ProcessAcceptTCP(AcceptEvent* acceptEvent);
+
+	void StartAcceptUDP();
+	void RegisterAcceptUDP(AcceptEvent* acceptEvent);
 
 	bool GQCS(UINT timeoutMs = INFINITE);
 	void Dispatch(IocpEvent* iocpEvent, int numOfBytes);
@@ -33,6 +50,7 @@ public:
 
 private:
 	NetAddress _netAddress = {};
+	ServerType _serverType;
 
 	int _sessionCount = 1;
 	SOCKET _listenSocket = INVALID_SOCKET;

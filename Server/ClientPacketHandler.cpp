@@ -6,6 +6,9 @@
 #include "Utils.h"
 //#include "DBConnectionPool.h"
 
+ServerType ClientPacketHandler::_serverType = ServerType::TCP;
+shared_ptr<UDPServer> ClientPacketHandler::_udpServer = nullptr;
+
 void ClientPacketHandler::HandlePacket(std::shared_ptr<PacketData> pkt)
 {
 	try
@@ -227,7 +230,8 @@ void ClientPacketHandler::Broadcast(PacketHeader& header, std::string& jsonStrin
 	reinterpret_cast<PacketHeader*>(sendBuffer->Buffer())->size = size;*/
 
 	sendBuffer->CopyData(buffer.data(), totalPacketSize);
-	sendQueue->Push({ sendBuffer, nullptr });
+	if (_serverType == ServerType::TCP) sendQueue->Push({ sendBuffer, nullptr });
+	else if (_serverType == ServerType::UDP) _udpServer->Broadcast(sendBuffer);
 
 	cout << "[SEND] Id -> " << header.id << ", Size -> " << header.size << ", Data -> " << jsonString << '\n';
 

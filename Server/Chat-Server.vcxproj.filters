@@ -62,6 +62,7 @@
     </ClCompile>
     <ClCompile Include="GameData.cpp" />
     <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="UDPServer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IocpCore.h">
@@ -117,6 +118,7 @@
     </ClInclude>
     <ClInclude Include="GameData.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="UDPServer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.gitignore" />
