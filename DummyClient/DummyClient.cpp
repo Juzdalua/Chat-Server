@@ -13,13 +13,12 @@
 using namespace std;
 using json = nlohmann::json;
 
-#pragma pack(push,1)
 struct PacketHeader
 {
 	UINT size; // 패킷 size
 	UINT id; // 프로토콜 ID (ex 1=로그인, 2=이동요청)
+	UINT seq;
 };
-#pragma pack(pop)
 
 enum class ServerType
 {
@@ -184,9 +183,8 @@ int main()
 	}
 
 	// 2. IP, PORT 설정
-	char IP[] = "127.0.0.1";
-	//char IP[] = "192.168.10.134";
-	//char IP[] = "192.168.10.129";
+	//char IP[] = "127.0.0.1";
+	char IP[] = "192.168.10.123";
 	u_short PORT = 1998;
 
 	SOCKADDR_IN serverAddr; // IPv4

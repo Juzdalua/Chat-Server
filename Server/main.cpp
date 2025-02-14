@@ -131,7 +131,6 @@ int main()
 		NetAddress(_IP, _PORT)
 	);
 
-
 	vector<thread> workers;
 	sendQueue->SetIocpCore(iocpCore);
 
@@ -144,6 +143,7 @@ int main()
 		iocpCore->StartAcceptTCP();
 
 		gameData = new GameData;
+		workers.emplace_back(IocpWorker, iocpCore);
 	}
 
 	else if (iocpCore->GetServerType() == ServerType::UDP)
@@ -158,7 +158,7 @@ int main()
 		workers.emplace_back(UdpServerWorker, udpServer);
 	}
 
-	workers.emplace_back(IocpWorker, iocpCore);
+	
 	workers.emplace_back(PacketWorker);
 
 	// Exit
@@ -168,8 +168,9 @@ int main()
 			worker.join();
 	}
 	delete GDBConnectionPool;
-
 	delete gameData;
+
+	if (ClientPacketHandler::_udpServer)  ClientPacketHandler::_udpServer.reset();  
 
 	return 0;
 }

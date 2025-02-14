@@ -18,8 +18,13 @@ UDPServer::~UDPServer()
 	if (serverSocket != INVALID_SOCKET)
 	{
 		closesocket(serverSocket);
+		serverSocket = INVALID_SOCKET;  
 	}
-	WSACleanup();
+
+	if (wsaData.wVersion != 0)
+	{
+		WSACleanup();
+	}
 }
 
 void UDPServer::Init()
