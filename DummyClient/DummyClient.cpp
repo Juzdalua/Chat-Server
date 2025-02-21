@@ -42,7 +42,7 @@ void RawSend(SOCKET& clientSocket, ServerType& serverType, SOCKADDR_IN& serverAd
 		int totalPacketSize = jsonSize + sizeof(PacketHeader);
 
 		//UINT id = 5000U;
-		UINT id = 123U;
+		UINT id = 4000U;
 		PacketHeader sendHeader = { 0 };
 		sendHeader.id = id;
 		sendHeader.size = sizeof(PacketHeader) + jsonString.size();
@@ -132,7 +132,7 @@ void RawRecv(SOCKET& clientSocket, ServerType& serverType)
 				break;
 
 			// 데이터 처리
-			cout << '\n' << "[RECV] ID -> " << header->id << ", SIZE -> " << header->size << ", LEN => " << recvLen << '\n';
+			cout << '\n' << "[RECV] ID -> " << header->id << ", SEQ -> " << header->seq << ", SIZE -> " << header->size << ", LEN => " << recvLen << '\n';
 
 			if (header->size > sizeof(PacketHeader))
 			{
@@ -160,8 +160,8 @@ int main()
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 		return 0;
 
-	//ServerType serverType = ServerType::TCP;
-	ServerType serverType = ServerType::UDP;
+	ServerType serverType = ServerType::TCP;
+	//ServerType serverType = ServerType::UDP;
 
 	/*
 		af: Address Family (AF_INET = IPv4, AF_INTE6 = IPv6)
@@ -185,7 +185,10 @@ int main()
 	// 2. IP, PORT 설정
 	//char IP[] = "127.0.0.1";
 	char IP[] = "192.168.10.123";
-	u_short PORT = 1998;
+	//char IP[] = "192.168.10.101";
+	//u_short PORT = 1998;
+	//u_short PORT = 1997;
+	u_short PORT = 1996;
 
 	SOCKADDR_IN serverAddr; // IPv4
 	memset(&serverAddr, 0, sizeof(serverAddr));
@@ -193,7 +196,7 @@ int main()
 	serverAddr.sin_port = htons(PORT);
 	inet_pton(AF_INET, IP, &serverAddr.sin_addr);
 
-	cout << IP << " " << PORT << ", "<< serverAddr.sin_port << '\n';
+	cout << IP << " " << PORT << ", " << serverAddr.sin_port << '\n';
 
 	/*
 		host to network short

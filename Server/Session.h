@@ -24,6 +24,7 @@ struct PacketHeader
 {
 	UINT size;
 	UINT id;
+	UINT seq;
 };
 
 enum class ServiceType : UINT
