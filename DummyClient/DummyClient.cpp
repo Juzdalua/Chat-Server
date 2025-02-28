@@ -30,6 +30,13 @@ void RawSend(SOCKET& clientSocket, ServerType& serverType, SOCKADDR_IN& serverAd
 {
 	while (true)
 	{
+		cout << "ID를 입력하세요: ";
+		int id;
+		cin >> id;
+		
+		cout << '\n';
+
+		cout << "데이터를 입력하세요: ";
 		string s;
 		cin >> s;
 
@@ -184,11 +191,11 @@ int main()
 
 	// 2. IP, PORT 설정
 	//char IP[] = "127.0.0.1";
-	char IP[] = "192.168.10.123";
-	//char IP[] = "192.168.10.101";
-	//u_short PORT = 1998;
-	//u_short PORT = 1997;
-	u_short PORT = 1996;
+	//char IP[] = "192.168.10.123";
+	char IP[] = "192.168.10.101";
+	//u_short PORT = 1998; // seating buck
+	//u_short PORT = 1997; // udp
+	u_short PORT = 1996; // tcp
 
 	SOCKADDR_IN serverAddr; // IPv4
 	memset(&serverAddr, 0, sizeof(serverAddr));
