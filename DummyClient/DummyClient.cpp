@@ -281,6 +281,7 @@ void RecvHandleUDP(SOCKET& clientSocket, ServerType& serverType)
 			return;
 		}
 
+		std::cout << "[RECV] LEN = " << recvLen << '\n';
 		// 패킷 분해하기
 		if (recvLen >= 33)  // 패킷 길이가 최소 49바이트 이상이어야 함
 		{
