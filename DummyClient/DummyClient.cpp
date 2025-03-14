@@ -20,6 +20,23 @@ struct PacketHeader
 	UINT seq;
 };
 
+#pragma pack(push,1)
+struct SendPacketHeader
+{
+	unsigned short sNetVersion;
+	short sMask;
+	unsigned char bSize;
+};
+#pragma pack(pop)
+
+#pragma pack(push,1)
+struct SteerPacket {
+	unsigned __int32 status;
+	float steerAngle;
+	float steerAngleRate;
+};
+#pragma pack(pop)
+
 enum class ServerType
 {
 	TCP,
@@ -103,42 +120,36 @@ void SendUDP(SOCKET& clientSocket, SOCKADDR_IN& serverAddr)
 }
 
 void SendUDPHandlePacket(SOCKET& clientSocket, SOCKADDR_IN& serverAddr) {
-	const int BUFFER_SIZE = 17;
 	while (true) {
 		this_thread::sleep_for(1s);
-		unsigned char buffer[BUFFER_SIZE];
+		std::vector<unsigned char> buffer;
+		const int BUFFER_SIZE = sizeof(SendPacketHeader) + sizeof(SteerPacket);
+		buffer.resize(BUFFER_SIZE);
 
-		unsigned short sNetVersion = 2025;
-		unsigned char bSize = BUFFER_SIZE;  // bSize를 17로 설정
-		unsigned short sMask = 1;
+		SendPacketHeader sendPacketHeader = { 0 };
+		sendPacketHeader.sNetVersion = 2025;
+		sendPacketHeader.bSize = BUFFER_SIZE;
+		sendPacketHeader.sMask = 0x0001;
 
-		unsigned __int32 status = 2;
-		float steerAngle = 1.2f;
-		float steerAngleRate = 2.3f;
+		SteerPacket steerPacket = { 0 };
+		steerPacket.status = 2;
+		steerPacket.steerAngle = 1.2f;
+		steerPacket.steerAngleRate = 2.3f;
 
-		memcpy(buffer, &sNetVersion, sizeof(unsigned short));        // 0~1 바이트에 sNetVersion
-		memcpy(buffer + 2, &sMask, sizeof(unsigned short));                // 2~3 바이트에 sMask
-		memcpy(buffer + 4, &bSize, sizeof(unsigned char));               // 4~5 바이트에 bSize
-		memcpy(buffer + 5, &status, sizeof(unsigned __int32));             // 5~8 바이트에 status
-		memcpy(buffer + 9, &steerAngle, sizeof(float));     // 9~12 바이트에 steerAngle
-		memcpy(buffer + 13, &steerAngleRate, sizeof(float));  // 13~16 바이트에 steerAngleRate
+		std::memcpy(buffer.data(), &sendPacketHeader, sizeof(SendPacketHeader));
+		std::memcpy(buffer.data() + sizeof(SendPacketHeader), &steerPacket, sizeof(SteerPacket));
 
-		int resultCode = sendto(clientSocket, (const char*)buffer, BUFFER_SIZE, 0, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
+		int resultCode = sendto(clientSocket, (const char*)buffer.data(), BUFFER_SIZE, 0, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
 		if (resultCode == SOCKET_ERROR) {
 			int errCode = WSAGetLastError();
 			cout << "Send ErrorCode: " << errCode << '\n';
 			return;
 		}
 
-		unsigned short sNetVersion1 = *reinterpret_cast<const unsigned short*>(&buffer[0]);
-		short sMask1 = *reinterpret_cast<const short*>(&buffer[2]);
-		unsigned char bSize1 = buffer[4];
-
-
 		cout << "[SEND] ";
-		cout << " sNetVersion1: "<< sNetVersion1;
-		cout << " bSize1: "<< (int)bSize1;
-		cout << " sMask1: " << sMask1;
+		cout << " sNetVersion: "<< sendPacketHeader.sNetVersion;
+		cout << " bSize: "<< (int)sendPacketHeader.bSize;
+		cout << " sMask: " << sendPacketHeader.sMask;
 		cout << '\n';
 	}
 }
@@ -734,7 +745,7 @@ int main()
 
 	// 2. IP, PORT 설정
 	char HOST_IP[] = "192.168.10.101";
-	u_short HOST_PORT = 2101;
+	u_short HOST_PORT = 2100;
 // 
 	//char SERVER_IP[] = "127.0.0.1";
 	//char SERVER_IP[] = "192.168.10.123";
@@ -742,7 +753,7 @@ int main()
 	//u_short SERVER_PORT = 1998; // seating buck
 	//u_short SERVER_PORT = 1997; // udp
 	//u_short SERVER_PORT = 1996; // tcp
-	u_short SERVER_PORT = 2001;
+	u_short SERVER_PORT = 2000;
 
 	SOCKADDR_IN hostAddr; // IPv4
 	memset(&hostAddr, 0, sizeof(hostAddr));
@@ -804,8 +815,8 @@ int main()
 	clientWorkers.emplace_back(RecvHandleUDP, ref(clientSocket), ref(serverType));
 	//clientWorkers.emplace_back(SendUDP, ref(clientSocket), ref(serverAddr));
 	
-	//clientWorkers.emplace_back(SendUDPHandlePacket, ref(clientSocket), ref(serverAddr));
-	clientWorkers.emplace_back(SendUDPCabinControlPacket, ref(clientSocket), ref(serverAddr));
+	clientWorkers.emplace_back(SendUDPHandlePacket, ref(clientSocket), ref(serverAddr));
+	//clientWorkers.emplace_back(SendUDPCabinControlPacket, ref(clientSocket), ref(serverAddr));
 	//clientWorkers.emplace_back(SendUDPCabinSwitchPacket, ref(clientSocket), ref(serverAddr));
 	//clientWorkers.emplace_back(SendUDPMotionPacket, ref(clientSocket), ref(serverAddr));
 
