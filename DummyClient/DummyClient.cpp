@@ -223,8 +223,8 @@ void SendUDPCabinSwitchPacket(SOCKET& clientSocket, SOCKADDR_IN& serverAddr) {
 		unsigned char MenuWheelbtn = 14;
 		unsigned char Menuwheel = 15;
 		unsigned char bookmark = 16;
-		unsigned char Lamp_TrnSigLftSwSta = 17;
-		unsigned char Lamp_TrnSigRtSwSta = 18;
+		unsigned char Lamp_TrnSigLftSwSta = 0;
+		unsigned char Lamp_TrnSigRtSwSta = 0;
 		unsigned char Light = 19;
 		unsigned char Lamp_HdLmpHiSwSta1 = 20;
 		unsigned char Lamp_HdLmpHiSwSta2 = 21;
@@ -350,14 +350,10 @@ void SendUDPCabinSwitchPacket(SOCKET& clientSocket, SOCKADDR_IN& serverAddr) {
 }
 
 void SendUDPMotionPacket(SOCKET& clientSocket, SOCKADDR_IN& serverAddr) {
-	const int BUFFER_SIZE = 137;
+	const int BUFFER_SIZE = 132;
 	while (true) {
 		this_thread::sleep_for(1s);
 		unsigned char buffer[BUFFER_SIZE];
-
-		unsigned short sNetVersion = 2025;
-		unsigned char bSize = BUFFER_SIZE;  // bSize를 17로 설정
-		unsigned short sMask = 1;
 
 		uint32_t FrameCounter = 1234;
 		uint32_t motionStatus = 1;
@@ -375,12 +371,7 @@ void SendUDPMotionPacket(SOCKET& clientSocket, SOCKADDR_IN& serverAddr) {
 		float actuator4Length = 1.28f, actuator5Length = 1.29f, actuator6Length = 1.30f;
 		float analogInput1 = 0.31f, analogInput2 = 0.32f, analogInput3 = 0.33f, analogInput4 = 0.34f;
 
-		memcpy(buffer, &sNetVersion, sizeof(unsigned short));       // 0~1 바이트에 sNetVersion
-		memcpy(buffer + 2, &sMask, sizeof(unsigned short));          // 2~3 바이트에 sMask
-		memcpy(buffer + 4, &bSize, sizeof(unsigned char));           // 4 바이트에 bSize
-
-		size_t offset = 5;
-
+		size_t offset = 0;
 		// uint32_t 데이터 추가 (FrameCounter, Motion Status, Error Level, Error Code, IO Info)
 		memcpy(buffer + offset, &FrameCounter, sizeof(FrameCounter)); offset += sizeof(FrameCounter);
 		memcpy(buffer + offset, &motionStatus, sizeof(motionStatus)); offset += sizeof(motionStatus);
@@ -431,97 +422,7 @@ void SendUDPMotionPacket(SOCKET& clientSocket, SOCKADDR_IN& serverAddr) {
 			cout << "Send ErrorCode: " << errCode << '\n';
 			return;
 		}
-
-		// 받은 데이터 출력
-		unsigned short sNetVersion1 = *reinterpret_cast<const unsigned short*>(&buffer[0]);
-		short sMask1 = *reinterpret_cast<const short*>(&buffer[2]);
-		unsigned char bSize1 = buffer[4];
-
-		uint32_t FrameCounter1 = *reinterpret_cast<const uint32_t*>(&buffer[5]);
-		uint32_t motionStatus1 = *reinterpret_cast<const uint32_t*>(&buffer[9]);
-		uint32_t errorLevel1 = *reinterpret_cast<const uint32_t*>(&buffer[13]);
-		uint32_t errorCode1 = *reinterpret_cast<const uint32_t*>(&buffer[17]);
-		uint32_t ioInfo1 = *reinterpret_cast<const uint32_t*>(&buffer[21]);
-
-		float xPosition1 = *reinterpret_cast<const float*>(&buffer[25]);
-		float yPosition1 = *reinterpret_cast<const float*>(&buffer[29]);
-		float zPosition1 = *reinterpret_cast<const float*>(&buffer[33]);
-		float yawPosition1 = *reinterpret_cast<const float*>(&buffer[37]);
-		float pitchPosition1 = *reinterpret_cast<const float*>(&buffer[41]);
-		float rollPosition1 = *reinterpret_cast<const float*>(&buffer[45]);
-
-		float xSpeed1 = *reinterpret_cast<const float*>(&buffer[49]);
-		float ySpeed1 = *reinterpret_cast<const float*>(&buffer[53]);
-		float zSpeed1 = *reinterpret_cast<const float*>(&buffer[57]);
-		float yawSpeed1 = *reinterpret_cast<const float*>(&buffer[61]);
-		float pitchSpeed1 = *reinterpret_cast<const float*>(&buffer[65]);
-		float rollSpeed1 = *reinterpret_cast<const float*>(&buffer[69]);
-
-		float xAcc1 = *reinterpret_cast<const float*>(&buffer[73]);
-		float yAcc1 = *reinterpret_cast<const float*>(&buffer[77]);
-		float zAcc1 = *reinterpret_cast<const float*>(&buffer[81]);
-		float yawAcc1 = *reinterpret_cast<const float*>(&buffer[85]);
-		float pitchAcc1 = *reinterpret_cast<const float*>(&buffer[89]);
-		float rollAcc1 = *reinterpret_cast<const float*>(&buffer[93]);
-
-		float actuator1Length1 = *reinterpret_cast<const float*>(&buffer[97]);
-		float actuator2Length1 = *reinterpret_cast<const float*>(&buffer[101]);
-		float actuator3Length1 = *reinterpret_cast<const float*>(&buffer[105]);
-		float actuator4Length1 = *reinterpret_cast<const float*>(&buffer[109]);
-		float actuator5Length1 = *reinterpret_cast<const float*>(&buffer[113]);
-		float actuator6Length1 = *reinterpret_cast<const float*>(&buffer[117]);
-
-		float analogInput1_1 = *reinterpret_cast<const float*>(&buffer[121]);
-		float analogInput2_1 = *reinterpret_cast<const float*>(&buffer[125]);
-		float analogInput3_1 = *reinterpret_cast<const float*>(&buffer[129]);
-		float analogInput4_1 = *reinterpret_cast<const float*>(&buffer[133]);
-
-		cout << "[SEND] ";
-		cout << "sNetVersion1: " << sNetVersion1 << " ";
-		cout << "sMask1: " << sMask1 << " ";
-		cout << "bSize1: " << (int)bSize1 << " ";
-		cout << "FrameCounter1: " << FrameCounter1 << " ";
-		cout << "motionStatus1: " << motionStatus1 << " ";
-		cout << "errorLevel1: " << errorLevel1 << " ";
-		cout << "errorCode1: " << errorCode1 << " ";
-		cout << "ioInfo1: " << ioInfo1 << " ";
-
-		cout << "xPosition1: " << xPosition1 << " ";
-		cout << "yPosition1: " << yPosition1 << " ";
-		cout << "zPosition1: " << zPosition1 << " ";
-		cout << "yawPosition1: " << yawPosition1 << " ";
-		cout << "pitchPosition1: " << pitchPosition1 << " ";
-		cout << "rollPosition1: " << rollPosition1 << " ";
-
-		cout << "xSpeed1: " << xSpeed1 << " ";
-		cout << "ySpeed1: " << ySpeed1 << " ";
-		cout << "zSpeed1: " << zSpeed1 << " ";
-		cout << "yawSpeed1: " << yawSpeed1 << " ";
-		cout << "pitchSpeed1: " << pitchSpeed1 << " ";
-		cout << "rollSpeed1: " << rollSpeed1 << " ";
-
-		cout << "xAcc1: " << xAcc1 << " ";
-		cout << "yAcc1: " << yAcc1 << " ";
-		cout << "zAcc1: " << zAcc1 << " ";
-		cout << "yawAcc1: " << yawAcc1 << " ";
-		cout << "pitchAcc1: " << pitchAcc1 << " ";
-		cout << "rollAcc1: " << rollAcc1 << " ";
-
-		cout << "actuator1Length1: " << actuator1Length1 << " ";
-		cout << "actuator2Length1: " << actuator2Length1 << " ";
-		cout << "actuator3Length1: " << actuator3Length1 << " ";
-		cout << "actuator4Length1: " << actuator4Length1 << " ";
-		cout << "actuator5Length1: " << actuator5Length1 << " ";
-		cout << "actuator6Length1: " << actuator6Length1 << " ";
-
-		cout << "analogInput1_1: " << analogInput1_1 << " ";
-		cout << "analogInput2_1: " << analogInput2_1 << " ";
-		cout << "analogInput3_1: " << analogInput3_1 << " ";
-		cout << "analogInput4_1: " << analogInput4_1 << endl;
-
-
-
-		cout << '\n';
+		cout << "[SEND]" << '\n';
 	}
 }
 
@@ -745,7 +646,7 @@ int main()
 
 	// 2. IP, PORT 설정
 	char HOST_IP[] = "192.168.10.101";
-	u_short HOST_PORT = 2100;
+	u_short HOST_PORT = 2102;
 // 
 	//char SERVER_IP[] = "127.0.0.1";
 	//char SERVER_IP[] = "192.168.10.123";
@@ -753,7 +654,7 @@ int main()
 	//u_short SERVER_PORT = 1998; // seating buck
 	//u_short SERVER_PORT = 1997; // udp
 	//u_short SERVER_PORT = 1996; // tcp
-	u_short SERVER_PORT = 2000;
+	u_short SERVER_PORT = 2002;
 
 	SOCKADDR_IN hostAddr; // IPv4
 	memset(&hostAddr, 0, sizeof(hostAddr));
@@ -815,9 +716,9 @@ int main()
 	clientWorkers.emplace_back(RecvHandleUDP, ref(clientSocket), ref(serverType));
 	//clientWorkers.emplace_back(SendUDP, ref(clientSocket), ref(serverAddr));
 	
-	clientWorkers.emplace_back(SendUDPHandlePacket, ref(clientSocket), ref(serverAddr));
+	//clientWorkers.emplace_back(SendUDPHandlePacket, ref(clientSocket), ref(serverAddr));
 	//clientWorkers.emplace_back(SendUDPCabinControlPacket, ref(clientSocket), ref(serverAddr));
-	//clientWorkers.emplace_back(SendUDPCabinSwitchPacket, ref(clientSocket), ref(serverAddr));
+	clientWorkers.emplace_back(SendUDPCabinSwitchPacket, ref(clientSocket), ref(serverAddr));
 	//clientWorkers.emplace_back(SendUDPMotionPacket, ref(clientSocket), ref(serverAddr));
 
 	// 5. Socket 종료
